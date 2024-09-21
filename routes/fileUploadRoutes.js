@@ -24,5 +24,7 @@ router.get('/templates/:userid/download', authenticateToken, fileUploadControlle
 
 router.delete('/templates/:id', authenticateToken, fileUploadController.deleteTemplateById);
 
+router.put('/templates/:id', authenticateToken, fileUploadController.UpdateFile);
+
 
 module.exports = router;

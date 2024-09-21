@@ -8,7 +8,10 @@ const cors = require('cors');
 
 // Middleware para analisar o corpo das solicitações e habilitar CORS
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3001', // Substitua pelo domínio do seu frontend
+  credentials: true // Habilita o envio de cookies e cabeçalhos de autenticação
+}));
 
 // Middleware de roteamento para os candidatos e outras rotas
 app.use('/v1', pessoaRoutes);

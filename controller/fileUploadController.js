@@ -7,6 +7,7 @@ const Docxtemplater = require("docxtemplater");
 const path = require('path');
 
 const { Logmessage } = require("../helper/Tools");
+const { log } = require('console');
 
 getTemplatesById = async (req, res) => {
     const { userid } = req.params; // Acessar o parâmetro de caminho
@@ -48,10 +49,10 @@ createFilledFile = async (req, res) => {
     try {
         // Consultar dados do candidato no banco de dados
         const connection = await pool.getConnection();
-        const [candidateRows] = await connection.query('SELECT * FROM pessoas WHERE id = ? AND userId = ?', [candidateId, userId]);
+        const [candidateRows] = await connection.query('SELECT * FROM pessoa WHERE id = ? AND userId = ?', [candidateId, userId]);
 
         // Consultar o template no banco de dados para obter o nome do arquivo
-        const [templateRows] = await connection.query('SELECT nome FROM template WHERE userId = ? and id = ?', [userId,templateId]);
+        const [templateRows] = await connection.query('SELECT nome FROM template WHERE userId = ? and id = ?', [userId, templateId]);
         connection.release();
 
         if (!candidateRows.length) {
@@ -95,7 +96,7 @@ createFilledFile = async (req, res) => {
     }
 };
 
- 
+
 
 
 // Configuração do Multer para salvar os arquivos no disco
@@ -133,7 +134,7 @@ const UploadFile = async (req, res) => {
     }
 
     const { descricao, userid } = req.body;
-    const userId = req.userId; 
+    const userId = req.userId;
     const nomearquivo = req.file.filename;
     const tamanho = req.file.size;
     const tipo = req.file.originalname.split('.').pop().toLowerCase()
@@ -155,6 +156,7 @@ const UploadFile = async (req, res) => {
 
         // Retornar os dados do arquivo junto com a mensagem de sucesso
         const insertedFileDetails = rows[0];
+        Logmessage(insertedFileDetails)
         res.setHeader("Access-Control-Allow-Origin", "*")
             .setHeader("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token")
             .setHeader("Access-Control-Allow-Methods", "*")
@@ -167,7 +169,7 @@ const UploadFile = async (req, res) => {
 
 const getTemplatesByUserId = async (req, res) => {
     const userId = req.params.userid;
-    
+
     try {
         // Consultar templates no banco de dados com base no ID do usuário
         const connection = await pool.getConnection();
@@ -185,31 +187,37 @@ const getTemplatesByUserId = async (req, res) => {
 
 const deleteTemplateById = async (req, res) => {
     const templateId = req.params.id;
-    const userId = req.userId; 
+    const userId = req.userId;
     try {
         // Consultar o nome do arquivo do template no banco de dados
         const connection = await pool.getConnection();
-        const query = 'SELECT nome FROM template WHERE userId=? AND id = ?';
-        const [rows] = await connection.query(query, [userId,templateId]);
+        const query = 'SELECT nome FROM template WHERE userid=? AND id = ?';
+        const [rows] = await connection.query(query, [userId, templateId]);
         connection.release();
 
         if (!rows.length) {
             return res.status(404).json({ message: 'Template não encontrado' });
         }
 
-        const { nomearquivo } = rows[0];
+        const { nome } = rows[0];
 
         // Excluir o arquivo da pasta
-        const filePath = path.join(__dirname, '..', 'uploads', nomearquivo);
-        Logmessage(filePath);
+        const filePath = path.join(__dirname, '..', 'uploads', nome);
+
         fs.unlink(filePath, (err) => {
             if (err) {
-                console.error('Erro ao excluir o arquivo:', err);
-                return res.status(500).json({ message: 'Erro interno do servidor ao excluir o arquivo' });
+                // Verifica se err não é null antes de acessar err.code
+                if (err !== null && err.code === 'ENOENT') {
+                    Logmessage("Arquivo não existe no diretório, avançando")
+                    deleteTemplateFromDatabase(templateId, req, res);
+                } else {
+                    console.error('Erro ao excluir o arquivo:', err);
+                    return res.status(500).json({ message: 'Erro interno do servidor ao excluir o arquivo' });
+                }
+            } else {
+                // Excluir o template do banco de dados
+                deleteTemplateFromDatabase(templateId, req, res);
             }
-
-            // Excluir o template do banco de dados
-            deleteTemplateFromDatabase(templateId, res);
         });
     } catch (error) {
         console.error('Erro ao consultar o nome do arquivo do template:', error);
@@ -217,13 +225,13 @@ const deleteTemplateById = async (req, res) => {
     }
 };
 
-const deleteTemplateFromDatabase = async (templateId, res) => {
-    const userId = req.userId; 
+const deleteTemplateFromDatabase = async (templateId, req, res) => {
+    const userId = req.userId;
     try {
         // Excluir o template do banco de dados
         const connection = await pool.getConnection();
         const query = 'DELETE FROM template WHERE userId= ? AND id = ?';
-        const [result] = await connection.query(query, [userId,templateId]);
+        const [result] = await connection.query(query, [userId, templateId]);
         connection.release();
 
         // Verificar se o template foi excluído com sucesso
@@ -242,4 +250,40 @@ const deleteTemplateFromDatabase = async (templateId, res) => {
     }
 };
 
-module.exports = { getTemplatesById, createFilledFile, UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById };			
+const UpdateFile = async(req,res) =>{
+    const { id } = req.params; // Captura o ID do parâmetro da rota
+    const newData = req.body; // Novos dados da pessoa a serem atualizados
+    const userId = req.userId; // Obtém o userId do token
+
+    try {
+        // Verifica se o registro com o ID especificado existe
+        const [existingTemplate] = await pool.query('SELECT * FROM template WHERE id = ?', [id]);
+        if (existingTemplate.length === 0) {
+            return res.status(404).json({ message: 'Template não encontrado' });
+        }
+
+        const template = existingTemplate[0];
+
+        // Verifica se o userId do token corresponde ao userId da pessoa
+        if (template.userId !== userId) {
+            return res.status(403).json({ message: 'Acesso não autorizado' });
+        }
+
+        // Atualiza os dados da pessoa no banco de dados
+        const connection = await pool.getConnection();
+        await connection.query('UPDATE template SET ? WHERE id = ?', [newData, id]);
+        connection.release();
+
+        Logmessage('Dados da template atualizados no banco de dados:'+ newData);
+        
+        // Recupera os dados atualizados da pessoa do banco de dados
+        const [updatedTemplate] = await pool.query('SELECT * FROM template WHERE id = ?', [id]);
+        
+        res.status(200).json(updatedTemplate[0]); // Retorna somente os dados atualizados da pessoa
+    } catch (error) {
+        Logmessage('Erro ao atualizar dados da template no banco de dados:'+ error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+}
+
+module.exports = { getTemplatesById, createFilledFile, UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile };			

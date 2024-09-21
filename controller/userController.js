@@ -67,11 +67,13 @@ Login = async (req, res) => {
             { userId: user.id, email: user.email },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
+        
         );
 
         res.status(200).json({
             message: 'Autenticado com sucesso',
-            token
+            token,
+            userId: user.id
         });
     } catch (error) {
         console.error('Erro no login:', error);

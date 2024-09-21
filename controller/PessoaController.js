@@ -41,7 +41,7 @@ listAllPessoas = async (req, res) => {
         const [results] = await connection.query('SELECT * FROM pessoa where userID=? order by createdAt desc LIMIT ?, ?', [req.userId,offset, pageSize]);
         connection.release();
         var now = new Date();
-        Logmessage('Lista de pessoas recuperada do banco de dados:'+ results);
+        //Logmessage('Lista de pessoas recuperada do banco de dados:'+ results);
 
         // Definir o cabeçalho X-Total-Count para enviar o total de resultados
         res.header('X-Total-Count', totalCount[0].total);
