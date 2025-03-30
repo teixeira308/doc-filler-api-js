@@ -10,8 +10,10 @@ createUser = async (req, res, next) => {
     try {
         Logmessage(req.body);
     
-        const { email, password,status,createdAt,updatedAt,name } = req.body;
+        const { email, password,name } = req.body;
         Logmessage("Criar usuario",email)
+        Logmessage("Criar usuario",name)
+        Logmessage("Criar usuario",password)
         // Verificar se o email já está cadastrado
         const [existingUser] = await pool.execute('SELECT * FROM user WHERE email = ?', [email]);
         if (existingUser.length > 0) {
