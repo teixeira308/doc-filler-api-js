@@ -24,7 +24,7 @@ createUser = async (req, res, next) => {
         // Inserir o usuário no banco de dados
         const query = 'INSERT INTO user (email, name,password) VALUES (?,?, ?)';
         const connection = await pool.getConnection();
-        const results = await connection.execute(query, [email, name,hashedPassword,status]);
+        const results = await connection.execute(query, [email, name,hashedPassword]);
         connection.release();
     
         // Preparar a resposta de sucesso
