@@ -22,7 +22,7 @@ createUser = async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(password, 10);
     
         // Inserir o usuário no banco de dados
-        const query = 'INSERT INTO user (email, name,password,status) VALUES (?,?, ?, ?)';
+        const query = 'INSERT INTO user (email, name,password) VALUES (?,?, ?)';
         const connection = await pool.getConnection();
         const results = await connection.execute(query, [email, name,hashedPassword,status]);
         connection.release();
