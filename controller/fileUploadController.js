@@ -24,7 +24,7 @@ getTemplatesById = async (req, res) => {
 
         // Consultar no banco de dados se o usuário possui acesso ao documento
         const connection = await pool.getConnection();
-        const [rows] = await connection.query('SELECT * FROM template WHERE userid = ? AND nome = ?', [userid, arquivo]);
+        const [rows] = await connection.query('SELECT * FROM template WHERE userId = ? AND nome = ?', [userid, arquivo]);
         connection.release();
 
         if (!rows.length) {
