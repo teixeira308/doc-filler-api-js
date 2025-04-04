@@ -1,6 +1,9 @@
 const pool = require('../config/dbConfig');
-const {Logmessage} = require( "../helper/Tools");
+const { Logmessage } = require("../helper/Tools");
+const multer = require('multer');
+const xlsx = require('xlsx');
 
+const upload = multer({ storage: multer.memoryStorage() });
 
 createPessoa = async (req, res) => {
     const pessoaData = req.body;
@@ -155,5 +158,39 @@ getPessoa = async (req, res) => {
 };
 
 
+const importPessoasFromExcel = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "Nenhum arquivo enviado" });
+        }
 
-module.exports = { createPessoa, listAllPessoas, alterPessoa, deletePessoa, getPessoa }
+        const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0]; // Pega a primeira aba do arquivo
+        const sheet = workbook.Sheets[sheetName];
+        const pessoas = xlsx.utils.sheet_to_json(sheet); // Converte para JSON
+
+        if (!pessoas.length) {
+            return res.status(400).json({ message: "O arquivo está vazio ou com formato inválido" });
+        }
+
+        const userId = req.userId; // Obtém o userId do token
+        const connection = await pool.getConnection();
+
+        for (const pessoa of pessoas) {
+            // Adiciona userId e insere no banco
+            pessoa.userId = userId;
+            await connection.query('INSERT INTO pessoa SET ?', pessoa);
+        }
+
+        connection.release();
+        Logmessage(`Importação de ${pessoas.length} pessoas concluída.`);
+        res.status(201).json({ message: `${pessoas.length} pessoas importadas com sucesso` });
+
+    } catch (error) {
+        Logmessage("Erro ao importar pessoas do Excel:", error);
+        res.status(500).json({ message: "Erro interno do servidor" });
+    }
+};
+
+
+module.exports = { createPessoa, listAllPessoas, alterPessoa, deletePessoa, getPessoa, importPessoasFromExcel }
