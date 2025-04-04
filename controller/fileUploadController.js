@@ -336,15 +336,21 @@ const createFilledFilesBatch = async (req, res) => {
             doc.render(candidate);
             const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
 
-            const nomeArquivo = `pessoa_${candidate.id}_${templateFileName}`;
+            const nomeArquivo = `${candidate.nome}_${templateFileName}`;
             zip.file(nomeArquivo, buf);
         }
 
         // Gera zip final com todos os arquivos
         const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
 
+        const now = new Date();
+        const formattedDate = `${now.getDate().toString().padStart(2, '0')}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getFullYear()}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+        
         res.setHeader('Content-Type', 'application/zip');
-        res.setHeader('Content-Disposition', 'attachment; filename="arquivos_gerados.zip"');
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="arquivos_gerados_${formattedDate}.zip"`
+        );        
         return res.status(200).send(zipBuffer);
     } catch (error) {
         console.error('Erro ao gerar arquivos em lote:', error);
