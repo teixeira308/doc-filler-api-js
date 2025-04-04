@@ -286,4 +286,72 @@ const UpdateFile = async(req,res) =>{
     }
 }
 
-module.exports = { getTemplatesById, createFilledFile, UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile };			
+const createFilledFilesBatch = async (req, res) => {
+    const userId = req.userId;
+    const { templateId, selectedIds } = req.body;
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Buscar template
+        const [templateRows] = await connection.query(
+            'SELECT nome FROM template WHERE id = ? AND userId = ?',
+            [templateId, userId]
+        );
+
+        if (!templateRows.length) {
+            connection.release();
+            return res.status(404).json({ message: 'Template não encontrado ou acesso não autorizado' });
+        }
+
+        const templateFileName = templateRows[0].nome;
+        const templatePath = path.join(__dirname, '..', 'uploads', templateFileName);
+        const content = fs.readFileSync(templatePath, 'binary');
+
+        // Buscar pessoas
+        let candidateQuery = 'SELECT * FROM pessoa WHERE userId = ?';
+        let candidateParams = [userId];
+
+        if (selectedIds && selectedIds.length > 0) {
+            const placeholders = selectedIds.map(() => '?').join(', ');
+            candidateQuery += ` AND id IN (${placeholders})`;
+            candidateParams = [userId, ...selectedIds];
+        }
+
+        const [candidates] = await connection.query(candidateQuery, candidateParams);
+        connection.release();
+
+        if (!candidates.length) {
+            return res.status(404).json({ message: 'Nenhuma pessoa encontrada' });
+        }
+
+        const zip = require('jszip')();
+        for (const candidate of candidates) {
+            const zipDoc = new PizZip(content);
+            const doc = new Docxtemplater(zipDoc, {
+                paragraphLoop: true,
+                linebreaks: true,
+            });
+
+            doc.render(candidate);
+            const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
+
+            const nomeArquivo = `pessoa_${candidate.id}_${templateFileName}`;
+            zip.file(nomeArquivo, buf);
+        }
+
+        // Gera zip final com todos os arquivos
+        const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', 'attachment; filename="arquivos_gerados.zip"');
+        return res.status(200).send(zipBuffer);
+    } catch (error) {
+        console.error('Erro ao gerar arquivos em lote:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+
+
+module.exports = { getTemplatesById, createFilledFile, UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile, createFilledFilesBatch };			

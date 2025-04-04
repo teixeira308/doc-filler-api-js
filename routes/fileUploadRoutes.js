@@ -18,6 +18,8 @@ router.post('/templates', authenticateToken, fileUploadController.uploadSingleFi
 
 router.get('/fill-docx-template/:idtemplate/pessoa/:idpessoa', authenticateToken, fileUploadController.createFilledFile );
 
+router.post('/fill-docx-template/batch', authenticateToken, fileUploadController.createFilledFilesBatch );
+
 router.get('/templates/:userid', authenticateToken, fileUploadController.getTemplatesByUserId);
 
 router.get('/templates/:userid/download', authenticateToken, fileUploadController.getTemplatesById);

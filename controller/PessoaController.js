@@ -38,7 +38,7 @@ listAllPessoas = async (req, res) => {
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT * FROM pessoa where userID=? order by createdAt desc LIMIT ?, ?', [req.userId,offset, pageSize]);
+        const [results] = await connection.query('SELECT * FROM pessoa where userID=? order by createdAt desc LIMIT ? OFFSET ?', [req.userId, pageSize, offset]);
         connection.release();
         var now = new Date();
         //Logmessage('Lista de pessoas recuperada do banco de dados:'+ results);
