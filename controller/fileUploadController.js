@@ -295,7 +295,7 @@ const createFilledFilesBatch = async (req, res) => {
 
         // Buscar template
         const [templateRows] = await connection.query(
-            'SELECT descricao FROM template WHERE id = ? AND userId = ?',
+            'SELECT descricao,nome FROM template WHERE id = ? AND userId = ?',
             [templateId, userId]
         );
 
@@ -304,7 +304,8 @@ const createFilledFilesBatch = async (req, res) => {
             return res.status(404).json({ message: 'Template não encontrado ou acesso não autorizado' });
         }
 
-        const templateFileName = templateRows[0].descricao;
+        const templateFileName = templateRows[0].nome;
+        const templateFilledFileName = templateRows[0].descricao;
         const templatePath = path.join(__dirname, '..', 'uploads', templateFileName);
         const content = fs.readFileSync(templatePath, 'binary');
 
@@ -336,7 +337,7 @@ const createFilledFilesBatch = async (req, res) => {
             doc.render(candidate);
             const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
 
-            const nomeArquivo = `${candidate.nome}_${templateFileName}`;
+            const nomeArquivo = `${candidate.nome}_${templateFilledFileName}`;
             zip.file(nomeArquivo, buf);
         }
 
