@@ -295,7 +295,7 @@ const createFilledFilesBatch = async (req, res) => {
 
         // Buscar template
         const [templateRows] = await connection.query(
-            'SELECT nome FROM template WHERE id = ? AND userId = ?',
+            'SELECT descricao FROM template WHERE id = ? AND userId = ?',
             [templateId, userId]
         );
 
