@@ -304,7 +304,7 @@ const createFilledFilesBatch = async (req, res) => {
             return res.status(404).json({ message: 'Template não encontrado ou acesso não autorizado' });
         }
 
-        const templateFileName = templateRows[0].nome;
+        const templateFileName = templateRows[0].descricao;
         const templatePath = path.join(__dirname, '..', 'uploads', templateFileName);
         const content = fs.readFileSync(templatePath, 'binary');
 
