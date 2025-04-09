@@ -337,7 +337,7 @@ const createFilledFilesBatch = async (req, res) => {
             doc.render(candidate);
             const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
 
-            const nomeArquivo = `${candidate.nome}_${templateFilledFileName}`;
+            const nomeArquivo = `${candidate.nome}_${templateFilledFileName}.docx`;
             zip.file(nomeArquivo, buf);
         }
 
