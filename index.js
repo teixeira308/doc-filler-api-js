@@ -4,6 +4,8 @@ const pessoaRoutes = require('./routes/pessoaRoutes');
 const fileUploadRoutes = require('./routes/fileUploadRoutes');
 const userRoute = require('./routes/userRoutes');
 const cors = require('cors');
+const categoriaPessoaRoutes = require('./routes/categoriaPessoaRoutes');
+
 
 
 // Middleware para analisar o corpo das solicitações e habilitar CORS
@@ -16,6 +18,7 @@ app.use(cors({
 // Middleware de roteamento para os candidatos e outras rotas
 app.use('/v1', pessoaRoutes);
 app.use('/v1', fileUploadRoutes);
+app.use('/v1', categoriaPessoaRoutes);
 app.use('/v1/users', userRoute);
 
 app.use(express.urlencoded({
