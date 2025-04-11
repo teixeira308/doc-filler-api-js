@@ -4,18 +4,18 @@ const { authenticateToken } = require('../middleware/auth');
 const GrupoController = require('../controller/GrupoController');
 
 // Rota para criar uma nova categoria de pessoa
-router.post('/grupo', authenticateToken, CategoriaPessoaController.createCategoriaPessoa);
+router.post('/grupo', authenticateToken, GrupoController.createGrupoPessoa);
 
 // Rota para listar todas as categorias de uma pessoa (do usuário autenticado)
-router.get('/grupo', authenticateToken, CategoriaPessoaController.listCategoriasPessoa);
+router.get('/grupo', authenticateToken, GrupoController.listGruposPessoa);
 
 // Rota para obter uma categoria específica
-router.get('/grupo/:id', authenticateToken, CategoriaPessoaController.getCategoriaPessoa);
+router.get('/grupo/:id', authenticateToken, GrupoController.getGrupoPessoa);
 
 // Rota para atualizar uma categoria
-router.put('/grupo/:id', authenticateToken, CategoriaPessoaController.updateCategoriaPessoa);
+router.put('/grupo/:id', authenticateToken, GrupoController.updateGrupoPessoa);
 
 // Rota para deletar uma categoria
-router.delete('/grupo/:id', authenticateToken, CategoriaPessoaController.deleteCategoriaPessoa);
+router.delete('/grupo/:id', authenticateToken, GrupoController.deleteGrupoPessoa);
 
 module.exports = router;
