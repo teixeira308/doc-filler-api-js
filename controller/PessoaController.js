@@ -36,12 +36,12 @@ listAllPessoas = async (req, res) => {
     try {
     
         const connection = await pool.getConnection();
-        const [totalCount] = await connection.query('SELECT COUNT(*) as total FROM pessoa where userID=?',req.userId);
+        const [totalCount] = await connection.query('SELECT COUNT(*) as total FROM pessoa where userId=?',req.userId);
 
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT p.*,g.nome as grupo_nome FROM pessoa p, grupo_pessoa g WHERE p.grupoId=g.id and p.userID=? order by createdAt desc LIMIT ? OFFSET ?', [req.userId, pageSize, offset]);
+        const [results] = await connection.query('SELECT p.*,g.nome as grupo_nome FROM pessoa p, grupo_pessoa g WHERE p.grupoId=g.id and p.userId=? order by createdAt desc LIMIT ? OFFSET ?', [req.userId, pageSize, offset]);
         connection.release();
         var now = new Date();
         //Logmessage('Lista de pessoas recuperada do banco de dados:'+ results);
