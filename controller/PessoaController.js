@@ -41,7 +41,7 @@ listAllPessoas = async (req, res) => {
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT * FROM pessoa where userID=? order by createdAt desc LIMIT ? OFFSET ?', [req.userId, pageSize, offset]);
+        const [results] = await connection.query('SELECT p.*,g.nome as grupo_nome FROM pessoa p, grupo_pessoa g WHERE p.grupoId=g.id and userID=? order by createdAt desc LIMIT ? OFFSET ?', [req.userId, pageSize, offset]);
         connection.release();
         var now = new Date();
         //Logmessage('Lista de pessoas recuperada do banco de dados:'+ results);
@@ -133,7 +133,7 @@ getPessoa = async (req, res) => {
 
     try {
         const connection = await pool.getConnection();
-        const [pessoa] = await connection.query('SELECT * FROM pessoa WHERE id = ?', [id]); // Consulta uma pessoa com base no ID
+        const [pessoa] = await connection.query('SELECT p.*,g.nome as grupo_nome FROM pessoa p, grupo_pessoa g WHERE p.grupoId=g.id and id = ?', [id]); // Consulta uma pessoa com base no ID
         connection.release();
 
         if (pessoa.length === 0) { // Se não houver pessoa com o ID especificado, retorna 404
