@@ -165,20 +165,26 @@ const importPessoasFromExcel = async (req, res) => {
         }
 
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0]; // Pega a primeira aba do arquivo
+        const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const pessoas = xlsx.utils.sheet_to_json(sheet); // Converte para JSON
+        const pessoas = xlsx.utils.sheet_to_json(sheet);
 
         if (!pessoas.length) {
             return res.status(400).json({ message: "O arquivo está vazio ou com formato inválido" });
         }
 
-        const userId = req.userId; // Obtém o userId do token
+        const userId = req.userId;
+        const grupoId = req.body.grupoId;
+
         const connection = await pool.getConnection();
 
         for (const pessoa of pessoas) {
-            // Adiciona userId e insere no banco
             pessoa.userId = userId;
+
+            if (grupoId) {
+                pessoa.grupo_id = grupoId;
+            }
+
             await connection.query('INSERT INTO pessoa SET ?', pessoa);
         }
 
@@ -191,6 +197,7 @@ const importPessoasFromExcel = async (req, res) => {
         res.status(500).json({ message: "Erro interno do servidor" });
     }
 };
+
 
 
 module.exports = { createPessoa, listAllPessoas, alterPessoa, deletePessoa, getPessoa, importPessoasFromExcel }
