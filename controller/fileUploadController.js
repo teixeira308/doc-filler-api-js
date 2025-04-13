@@ -292,7 +292,8 @@ const createFilledFilesBatch = async (req, res) => {
 
     try {
         const connection = await pool.getConnection();
-
+        console.log("pessoa: ",pessoaIds)
+        console.log("grupo: ",grupoIds)
         // Buscar template
         const [templateRows] = await connection.query(
             'SELECT descricao,nome FROM template WHERE id = ? AND userId = ?',
