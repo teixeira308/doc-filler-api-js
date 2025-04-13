@@ -25,19 +25,36 @@ createGrupoPessoa = async (req, res) => {
 
 // Listar grupos de pessoa
 listGruposPessoa = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
   const userId = req.userId;
 
   try {
     const connection = await pool.getConnection();
-    const [results] = await connection.query('SELECT * FROM grupo_pessoa WHERE userId = ? ORDER BY createdAt DESC', [userId]);
+
+    const [totalCount] = await connection.query(
+      'SELECT COUNT(*) as total FROM grupo_pessoa WHERE userId = ?',
+      [userId]
+    );
+
+    const offset = (page - 1) * pageSize;
+    const totalPages = Math.ceil(totalCount[0].total / pageSize);
+
+    const [results] = await connection.query(
+      'SELECT * FROM grupo_pessoa WHERE userId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?',
+      [userId, pageSize, offset]
+    );
+
     connection.release();
 
-    res.status(200).json(results);
+    res.header('X-Total-Count', totalCount[0].total);
+    res.status(200).json({ data: results, page, pageSize, totalPages });
   } catch (error) {
     Logmessage('Erro ao listar grupos de pessoa:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
   }
 };
+
 
 // Obter grupo de pessoa por ID
 getGrupoPessoa = async (req, res) => {
