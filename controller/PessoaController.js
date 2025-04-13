@@ -171,7 +171,6 @@ const importPessoasFromExcel = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ message: "Nenhum arquivo enviado" });
         }
-        console.log(req.body.grupoId);  // Verifique se o grupoId está aqui
        
 
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
@@ -194,8 +193,7 @@ const importPessoasFromExcel = async (req, res) => {
             if (grupoId) {
                 pessoa.grupoId = grupoId;
             }
-            console.log(pessoa.grupoId)
-            console.log('INSERT INTO pessoa SET ?', pessoa);
+           
             await connection.query('INSERT INTO pessoa SET ?', pessoa);
         }
 
