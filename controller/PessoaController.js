@@ -168,12 +168,18 @@ getPessoa = async (req, res) => {
 
 const importPessoasFromExcel = async (req, res) => {
     try {
-        if (!req.file) {
+        // Verifique se o arquivo foi enviado
+        if (!req.files || !req.files['file']) {
             return res.status(400).json({ message: "Nenhum arquivo enviado" });
         }
-       
 
-        const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+        // Verifique se o grupoId foi enviado
+        const grupoId = req.body.grupoId;
+        if (!grupoId) {
+            return res.status(400).json({ message: "Grupo ID não fornecido" });
+        }
+
+        const workbook = xlsx.read(req.files['file'][0].buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const pessoas = xlsx.utils.sheet_to_json(sheet);
@@ -183,17 +189,11 @@ const importPessoasFromExcel = async (req, res) => {
         }
 
         const userId = req.userId;
-        const grupoId = req.body.grupoId;
-
         const connection = await pool.getConnection();
 
         for (const pessoa of pessoas) {
             pessoa.userId = userId;
-
-            if (grupoId) {
-                pessoa.grupoId = grupoId;
-            }
-           
+            pessoa.grupoId = grupoId;  // Adiciona o grupoId ao objeto
             await connection.query('INSERT INTO pessoa SET ?', pessoa);
         }
 
@@ -206,6 +206,7 @@ const importPessoasFromExcel = async (req, res) => {
         res.status(500).json({ message: "Erro interno do servidor" });
     }
 };
+
 
 
 
