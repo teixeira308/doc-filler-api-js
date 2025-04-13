@@ -171,6 +171,8 @@ const importPessoasFromExcel = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ message: "Nenhum arquivo enviado" });
         }
+        console.log(req.body);  // Verifique se o grupoId está aqui
+        console.log(req.file); 
 
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
