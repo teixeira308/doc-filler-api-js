@@ -5,7 +5,6 @@ const fs = require('fs');
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 const path = require('path');
-
 const { Logmessage } = require("../helper/Tools");
 const { log } = require('console');
 
@@ -292,12 +291,13 @@ const createFilledFilesBatch = async (req, res) => {
 
     try {
         const connection = await pool.getConnection();
-        console.log("pessoa: ",pessoaIds)
-        console.log("grupo: ",grupoIds)
-        console.log("template",templateId)
+        console.log("pessoa: ", pessoaIds);
+        console.log("grupo: ", grupoIds);
+        console.log("template", templateId);
+
         // Buscar template
         const [templateRows] = await connection.query(
-            'SELECT descricao,nome FROM template WHERE id = ? AND userId = ?',
+            'SELECT descricao, nome FROM template WHERE id = ? AND userId = ?',
             [templateId, userId]
         );
 
@@ -328,13 +328,29 @@ const createFilledFilesBatch = async (req, res) => {
         }
 
         const [candidates] = await connection.query(candidateQuery, candidateParams);
-        connection.release();
 
         if (!candidates.length) {
+            connection.release();
             return res.status(404).json({ message: 'Nenhuma pessoa encontrada' });
         }
 
+        // Buscar os nomes dos grupos para cada grupoId
+        const groupQuery = 'SELECT id, nome FROM grupo_pessoa WHERE id IN (?) AND userId = ?';
+        const groupIds = [...new Set(candidates.map(candidate => candidate.grupoId))];  // Remove duplicados
+        const [groups] = await connection.query(groupQuery, [groupIds, userId]);
+
+        connection.release();
+
         const zip = require('jszip')();
+        const groupNames = {}; // Para armazenar os nomes dos grupos pelos IDs
+
+        // Organizar os documentos por grupos
+        for (const group of groups) {
+            groupNames[group.id] = group.nome; // Mapear grupoId -> nome do grupo
+        }
+
+        const filesByGroup = {}; // Para armazenar os arquivos por grupo
+
         for (const candidate of candidates) {
             const zipDoc = new PizZip(content);
             const doc = new Docxtemplater(zipDoc, {
@@ -345,11 +361,28 @@ const createFilledFilesBatch = async (req, res) => {
             doc.render(candidate);
             const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
 
+            // Nome do arquivo DOCX
             const nomeArquivo = `${candidate.nome}_${templateFilledFileName}.docx`;
-            zip.file(nomeArquivo, buf);
+
+            // Verifica o nome do grupo usando o grupoId do candidato
+            const groupName = groupNames[candidate.grupoId] || 'sem_grupo';
+            if (!filesByGroup[groupName]) {
+                filesByGroup[groupName] = [];
+            }
+
+            // Adiciona o arquivo à pasta do grupo correspondente
+            filesByGroup[groupName].push({ nome: nomeArquivo, conteudo: buf });
         }
 
-        // Gera zip final com todos os arquivos
+        // Adiciona as pastas e arquivos ao arquivo ZIP
+        for (const [groupName, files] of Object.entries(filesByGroup)) {
+            const folder = zip.folder(groupName); // Cria uma pasta para o grupo
+            for (const file of files) {
+                folder.file(file.nome, file.conteudo);
+            }
+        }
+
+        // Gera o ZIP
         const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
 
         const now = new Date();
@@ -366,6 +399,7 @@ const createFilledFilesBatch = async (req, res) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 
 
