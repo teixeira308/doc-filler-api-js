@@ -194,6 +194,7 @@ const importPessoasFromExcel = async (req, res) => {
             if (grupoId) {
                 pessoa.grupoId = grupoId;
             }
+            console.log(pessoa.grupoId)
             console.log('INSERT INTO pessoa SET ?', pessoa);
             await connection.query('INSERT INTO pessoa SET ?', pessoa);
         }
