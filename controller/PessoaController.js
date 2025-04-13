@@ -175,9 +175,10 @@ const importPessoasFromExcel = async (req, res) => {
 
         // Verifique se o grupoId foi enviado
         const grupoId = req.body.grupoId;
-        if (!grupoId) {
-            return res.status(400).json({ message: "Grupo ID não fornecido" });
-        }
+        //Descomentar caso for melhor o grupoId ser obrigatório
+        //if (!grupoId) {
+        //    return res.status(400).json({ message: "Grupo ID não fornecido" });
+        //}
 
         const workbook = xlsx.read(req.files['file'][0].buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
