@@ -288,7 +288,7 @@ const UpdateFile = async(req,res) =>{
 
 const createFilledFilesBatch = async (req, res) => {
     const userId = req.userId;
-    const { templateId, selectedIds } = req.body;
+    const { templateId, pessoaIds, grupoIds } = req.body;
 
     try {
         const connection = await pool.getConnection();
@@ -309,14 +309,20 @@ const createFilledFilesBatch = async (req, res) => {
         const templatePath = path.join(__dirname, '..', 'uploads', templateFileName);
         const content = fs.readFileSync(templatePath, 'binary');
 
-        // Buscar pessoas
+        // Buscar pessoas com base em pessoaIds e grupoIds
         let candidateQuery = 'SELECT * FROM pessoa WHERE userId = ?';
-        let candidateParams = [userId];
+        const candidateParams = [userId];
 
-        if (selectedIds && selectedIds.length > 0) {
-            const placeholders = selectedIds.map(() => '?').join(', ');
+        if (pessoaIds && pessoaIds.length > 0) {
+            const placeholders = pessoaIds.map(() => '?').join(', ');
             candidateQuery += ` AND id IN (${placeholders})`;
-            candidateParams = [userId, ...selectedIds];
+            candidateParams.push(...pessoaIds);
+        }
+
+        if (grupoIds && grupoIds.length > 0) {
+            const placeholders = grupoIds.map(() => '?').join(', ');
+            candidateQuery += ` AND grupoId IN (${placeholders})`;
+            candidateParams.push(...grupoIds);
         }
 
         const [candidates] = await connection.query(candidateQuery, candidateParams);
@@ -358,6 +364,7 @@ const createFilledFilesBatch = async (req, res) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 
 
