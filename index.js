@@ -5,7 +5,7 @@ const fileUploadRoutes = require('./routes/fileUploadRoutes');
 const userRoute = require('./routes/userRoutes');
 const cors = require('cors');
 const GrupoRoutes = require('./routes/GrupoRoutes')
-const epiRoutes = require('./routes/epiRoutes');
+const epiRoutes = require('./routes/EpiRoutes')
 
 
 // Middleware para analisar o corpo das solicitações e habilitar CORS
