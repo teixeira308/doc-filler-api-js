@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
-const EpiController = require("../controller/EpiController")
+const EpiController = require("../controller/epiController")
 
 // Rota para criar um novo EPI
 router.post('/epi', authenticateToken, EpiController.createEpi);
