@@ -431,7 +431,7 @@ const createFilledFileEpi = async (req, res) => {
         // Buscar dados dos EPIs selecionados
         const placeholders = epiIds.map(() => '?').join(',');
         const [epiRows] = await connection.query(
-            `SELECT * FROM epi WHERE id IN (${placeholders}) AND userId = ?`,
+            `SELECT * FROM epis WHERE id IN (${placeholders}) AND userId = ?`,
             [...epiIds, userId]
         );
 
