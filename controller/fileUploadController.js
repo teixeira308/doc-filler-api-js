@@ -400,8 +400,92 @@ const createFilledFilesBatch = async (req, res) => {
     }
 };
 
+const createFilledFileEpi = async (req, res) => {
+    const candidateId = req.params.idpessoa;
+    const templateId = req.params.idtemplate;
+    const userId = req.userId;
+    const { epiIds } = req.body;
+
+    Logmessage("Gerando arquivo da pessoa (EPIs): " + candidateId);
+    Logmessage("Template com EPIs: " + templateId);
+
+    if (!Array.isArray(epiIds) || epiIds.length === 0) {
+        return res.status(400).json({ message: 'A lista de EPIs (epiIds) é obrigatória.' });
+    }
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Buscar dados da pessoa
+        const [candidateRows] = await connection.query(
+            'SELECT * FROM pessoa WHERE id = ? AND userId = ?',
+            [candidateId, userId]
+        );
+
+        // Buscar nome do template
+        const [templateRows] = await connection.query(
+            'SELECT nome FROM template WHERE userId = ? and id = ?',
+            [userId, templateId]
+        );
+
+        // Buscar dados dos EPIs selecionados
+        const placeholders = epiIds.map(() => '?').join(',');
+        const [epiRows] = await connection.query(
+            `SELECT * FROM epi WHERE id IN (${placeholders}) AND userId = ?`,
+            [...epiIds, userId]
+        );
+
+        connection.release();
+
+        if (!candidateRows.length) {
+            return res.status(404).json({ message: 'Pessoa não encontrada ou acesso não autorizado' });
+        }
+
+        if (!templateRows.length) {
+            return res.status(404).json({ message: 'Template não encontrado ou acesso não autorizado' });
+        }
+
+        if (!epiRows.length) {
+            return res.status(404).json({ message: 'Nenhum EPI encontrado com os IDs fornecidos.' });
+        }
+
+        const candidate = candidateRows[0];
+        const templateFileName = templateRows[0].nome;
+        Logmessage("Template com EPIs utilizado: " + templateFileName);
+
+        // Leitura do template
+        const content = fs.readFileSync(path.join(__dirname, '..', 'uploads', templateFileName), 'binary');
+
+        const zip = new PizZip(content);
+        const doc = new Docxtemplater(zip, {
+            paragraphLoop: true,
+            linebreaks: true,
+        });
+
+        // Injetando dados no template
+        const dataToFill = {
+            ...candidate,
+            epis: epiRows, // <- precisa estar como array no template (ex: {{#epis}}{{nome}} - {{ca}}{{/epis}})
+        };
+
+        doc.render(dataToFill);
+
+        const buf = doc.getZip().generate({
+            type: "nodebuffer",
+            compression: "DEFLATE",
+        });
+
+        res.setHeader("Access-Control-Allow-Origin", "*")
+            .setHeader("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token")
+            .setHeader("Access-Control-Allow-Methods", "*")
+            .setHeader('Content-Disposition', `attachment; filename=filled_${templateFileName}.docx`)
+            .status(200).send(buf);
+    } catch (error) {
+        console.error('Erro ao preencher o arquivo docx com EPIs:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
 
 
 
-
-module.exports = { getTemplatesById, createFilledFile, UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile, createFilledFilesBatch };			
+module.exports = { getTemplatesById, createFilledFile, UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile, createFilledFilesBatch,createFilledFileEpi };			
