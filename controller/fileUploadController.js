@@ -462,6 +462,7 @@ const createFilledFileEpi = async (req, res) => {
             linebreaks: true,
         });
 
+        Logmessage(epiRows)
         // Injetando dados no template
         const dataToFill = {
             ...candidate,
