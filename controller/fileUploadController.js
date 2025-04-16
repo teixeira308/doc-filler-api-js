@@ -462,13 +462,13 @@ const createFilledFileEpi = async (req, res) => {
             linebreaks: true,
         });
 
-        Logmessage(dataToFill)
+       
         // Injetando dados no template
         const dataToFill = {
             pessoa: candidate,
             epis: epiRows, // <- precisa estar como array no template (ex: {{#epis}}{{nome}} - {{ca}}{{/epis}})
         };
-
+        Logmessage(dataToFill)
         doc.render(dataToFill);
 
         const buf = doc.getZip().generate({
