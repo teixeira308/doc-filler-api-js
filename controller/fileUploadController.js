@@ -481,7 +481,7 @@ const createFilledFileEpi = async (req, res) => {
           
         // Injetando dados no template
         const dataToFill = {
-            pessoa: candidate,
+            ...candidate,
             dataGeracaoDocumento: dataGeracaoDocumento,
             epis: epiRows, // <- precisa estar como array no template (ex: {{#epis}}{{nome}} - {{ca}}{{/epis}})
         };
