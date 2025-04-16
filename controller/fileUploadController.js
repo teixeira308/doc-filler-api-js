@@ -76,11 +76,15 @@ createFilledFile = async (req, res) => {
             linebreaks: true,
         });
 
-
+        const dataGeracaoDocumento = new Date().toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          });
 
         const dataToFill = {
             ...candidate,
-            dataGeracaoDocumento: new Date().toLocaleDateString(),
+            dataGeracaoDocumento: dataGeracaoDocumento,
         };
 
         doc.render(dataToFill);
@@ -469,11 +473,16 @@ const createFilledFileEpi = async (req, res) => {
             linebreaks: true,
         });
 
-       
+        const dataGeracaoDocumento = new Date().toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          });
+          
         // Injetando dados no template
         const dataToFill = {
             pessoa: candidate,
-            dataGeracaoDocumento: new Date().toLocaleDateString(),
+            dataGeracaoDocumento: dataGeracaoDocumento,
             epis: epiRows, // <- precisa estar como array no template (ex: {{#epis}}{{nome}} - {{ca}}{{/epis}})
         };
         Logmessage(dataToFill)
