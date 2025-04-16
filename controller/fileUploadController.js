@@ -76,7 +76,14 @@ createFilledFile = async (req, res) => {
             linebreaks: true,
         });
 
-        doc.render(candidate);
+
+
+        const dataToFill = {
+            ...candidate,
+            dataGeracaoDocumento: new Date().toLocaleDateString(),
+        };
+
+        doc.render(dataToFill);
 
         const buf = doc.getZip().generate({
             type: "nodebuffer",
@@ -466,6 +473,7 @@ const createFilledFileEpi = async (req, res) => {
         // Injetando dados no template
         const dataToFill = {
             pessoa: candidate,
+            dataGeracaoDocumento: new Date().toLocaleDateString(),
             epis: epiRows, // <- precisa estar como array no template (ex: {{#epis}}{{nome}} - {{ca}}{{/epis}})
         };
         Logmessage(dataToFill)
