@@ -505,5 +505,25 @@ const createFilledFileEpi = async (req, res) => {
 };
 
 
+const getTemplateById = async (req, res) => {
+    const templateId = req.params.id;
+    const userId = req.userId;
+    try {
+        // Consultar o nome do arquivo do template no banco de dados
+        const connection = await pool.getConnection();
+        const query = 'SELECT * FROM template WHERE userid=? AND id = ?';
+        const [rows] = await connection.query(query, [userId, templateId]);
+        connection.release();
 
-module.exports = { getTemplatesById, createFilledFile, UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile, createFilledFilesBatch,createFilledFileEpi };			
+        if (!rows.length) {
+            return res.status(404).json({ message: 'Template não encontrado' });
+        }
+
+
+    } catch (error) {
+        console.error('Erro ao consultar o template:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+module.exports = { getTemplatesById, createFilledFile, getTemplateById,UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile, createFilledFilesBatch,createFilledFileEpi };			
