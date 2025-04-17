@@ -143,7 +143,7 @@ const UploadFile = async (req, res) => {
         return res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
     }
 
-    const { descricao, userid } = req.body;
+    const { descricao, userid, tipotemplate } = req.body;
     const userId = req.userId;
     const nomearquivo = req.file.filename;
     const tamanho = req.file.size;
