@@ -1,5 +1,6 @@
 const pool = require('../config/dbConfig');
 const { Logmessage } = require("../helper/Tools");
+const xlsx = require('xlsx');
 
 // Criar EPI
 createEpi = async (req, res) => {
