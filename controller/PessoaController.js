@@ -141,7 +141,7 @@ getPessoa = async (req, res) => {
 
     try {
         const connection = await pool.getConnection();
-        const [pessoa] = await connection.query('SELECT p.*,g.nome as grupo_nome FROM pessoa p, grupo_pessoa g WHERE p.grupoId=g.id and p.id = ?', [id]); // Consulta uma pessoa com base no ID
+        const [pessoa] = await connection.query('SELECT p.*, g.nome AS grupo_nome FROM pessoa p LEFT JOIN grupo_pessoa g ON p.grupoId = g.id WHERE p.userId = ? AND p.id = ? ORDER BY p.createdAt DESC ', [id]); // Consulta uma pessoa com base no ID
         connection.release();
 
         if (pessoa.length === 0) { // Se não houver pessoa com o ID especificado, retorna 404
