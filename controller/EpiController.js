@@ -161,7 +161,8 @@ const EpiFromExcel = async (req, res) => {
     res.status(201).json({ message: `${epis.length} Epis importadas com sucesso` });
 
   } catch (error) {
-    Logmessage("Erro ao importar EPIs do Excel:", error);
+    console.error("Erro ao importar EPIs do Excel:", error); // 👈 imprime o stack trace
+    Logmessage(`Erro ao importar EPIs do Excel: ${error.message}`); // 👈 registra a mensagem
     res.status(500).json({ message: "Erro interno do servidor" });
   }
 };
