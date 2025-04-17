@@ -143,7 +143,7 @@ const UploadFile = async (req, res) => {
         return res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
     }
 
-    const { descricao, userid, tipotemplate } = req.body;
+    const { descricao, userid, tipoTemplate } = req.body;
     const userId = req.userId;
     const nomearquivo = req.file.filename;
     const tamanho = req.file.size;
@@ -153,7 +153,7 @@ const UploadFile = async (req, res) => {
         // Gravar os detalhes do arquivo no banco de dados
         const connection = await pool.getConnection();
         const query = 'INSERT INTO template (descricao, nome, createdAt, tipo, userid, tamanho,tipotemplate) VALUES (?, ?, ?, ?, ?, ?,?)';
-        const values = [descricao, nomearquivo, new Date(), tipo, userId, tamanho,tipotemplate];
+        const values = [descricao, nomearquivo, new Date(), tipo, userId, tamanho,tipoTemplate];
         await connection.query(query, values);
 
         // Buscar os dados recém-inseridos no banco de dados
