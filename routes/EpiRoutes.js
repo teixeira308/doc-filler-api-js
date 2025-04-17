@@ -3,6 +3,11 @@ const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const EpiController = require('../controller/EpiController');
 
+const multer = require('multer');
+const upload = multer().fields([
+    { name: 'file', maxCount: 1 },  // Aceita um arquivo com o nome 'file'
+  ]);
+  
 // Rota para criar um novo EPI
 router.post('/epi', authenticateToken, EpiController.createEpi);
 
