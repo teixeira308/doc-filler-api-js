@@ -508,6 +508,8 @@ const createFilledFileEpi = async (req, res) => {
 const getTemplateById = async (req, res) => {
     const templateId = req.params.id;
     const userId = req.userId;
+    Logmessage(templateId)
+    Logmessage(userId)
     try {
         // Consultar o nome do arquivo do template no banco de dados
         const connection = await pool.getConnection();
