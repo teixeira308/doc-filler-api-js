@@ -529,4 +529,139 @@ const getTemplateById = async (req, res) => {
     }
 };
 
-module.exports = { getTemplatesById, createFilledFile, getTemplateById,UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile, createFilledFilesBatch,createFilledFileEpi };			
+const createFilledFilesBatchEPI = async (req, res) => {
+    const userId = req.userId;
+    const { templateId, pessoaIds, grupoIds, epiIds } = req.body;
+
+    if (!Array.isArray(epiIds) || epiIds.length === 0) {
+        return res.status(400).json({ message: 'A lista de EPIs (epiIds) é obrigatória.' });
+    }
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Buscar template
+        const [templateRows] = await connection.query(
+            'SELECT descricao, nome FROM template WHERE id = ? AND userId = ?',
+            [templateId, userId]
+        );
+
+        if (!templateRows.length) {
+            connection.release();
+            return res.status(404).json({ message: 'Template não encontrado ou acesso não autorizado' });
+        }
+
+        const templateFileName = templateRows[0].nome;
+        const templateFilledFileName = templateRows[0].descricao;
+        const templatePath = path.join(__dirname, '..', 'uploads', templateFileName);
+        const content = fs.readFileSync(templatePath, 'binary');
+
+        // Buscar EPIs
+        const epiPlaceholders = epiIds.map(() => '?').join(',');
+        const [epiRows] = await connection.query(
+            `SELECT * FROM epis WHERE id IN (${epiPlaceholders}) AND userId = ?`,
+            [...epiIds, userId]
+        );
+
+        if (!epiRows.length) {
+            connection.release();
+            return res.status(404).json({ message: 'Nenhum EPI encontrado com os IDs fornecidos.' });
+        }
+
+        // Buscar pessoas
+        let candidateQuery = 'SELECT * FROM pessoa WHERE userId = ?';
+        const candidateParams = [userId];
+
+        if (pessoaIds && pessoaIds.length > 0) {
+            const placeholders = pessoaIds.map(() => '?').join(', ');
+            candidateQuery += ` AND id IN (${placeholders})`;
+            candidateParams.push(...pessoaIds);
+        }
+
+        if (grupoIds && grupoIds.length > 0) {
+            const placeholders = grupoIds.map(() => '?').join(', ');
+            candidateQuery += ` AND grupoId IN (${placeholders})`;
+            candidateParams.push(...grupoIds);
+        }
+
+        const [candidates] = await connection.query(candidateQuery, candidateParams);
+
+        if (!candidates.length) {
+            connection.release();
+            return res.status(404).json({ message: 'Nenhuma pessoa encontrada' });
+        }
+
+        // Buscar os nomes dos grupos
+        const groupIds = [...new Set(candidates.map(candidate => candidate.grupoId))];
+        const [groups] = await connection.query(
+            'SELECT id, nome FROM grupo_pessoa WHERE id IN (?) AND userId = ?',
+            [groupIds, userId]
+        );
+
+        connection.release();
+
+        const zip = require('jszip')();
+        const groupNames = {};
+        for (const group of groups) {
+            groupNames[group.id] = group.nome;
+        }
+
+        const filesByGroup = {};
+        for (const candidate of candidates) {
+            const zipDoc = new PizZip(content);
+            const doc = new Docxtemplater(zipDoc, {
+                paragraphLoop: true,
+                linebreaks: true,
+            });
+
+            const dataGeracaoDocumento = new Date().toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+            });
+
+            const dataToFill = {
+                ...candidate,
+                dataGeracaoDocumento,
+                epis: epiRows
+            };
+
+            doc.render(dataToFill);
+            const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
+
+            const nomeArquivo = `${candidate.nome}_${templateFilledFileName}.docx`;
+            const groupName = groupNames[candidate.grupoId] || 'sem_grupo';
+
+            if (!filesByGroup[groupName]) {
+                filesByGroup[groupName] = [];
+            }
+
+            filesByGroup[groupName].push({ nome: nomeArquivo, conteudo: buf });
+        }
+
+        for (const [groupName, files] of Object.entries(filesByGroup)) {
+            const folder = zip.folder(groupName);
+            for (const file of files) {
+                folder.file(file.nome, file.conteudo);
+            }
+        }
+
+        const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+
+        const now = new Date();
+        const formattedDate = `${now.getDate().toString().padStart(2, '0')}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getFullYear()}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="arquivos_gerados_epis_${formattedDate}.zip"`
+        );
+        return res.status(200).send(zipBuffer);
+    } catch (error) {
+        console.error('Erro ao gerar arquivos EPIs em lote:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+
+module.exports = { getTemplatesById, createFilledFile,createFilledFilesBatchEPI, getTemplateById,UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile, createFilledFilesBatch,createFilledFileEpi };			

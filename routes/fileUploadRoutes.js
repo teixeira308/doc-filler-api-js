@@ -24,7 +24,7 @@ router.post('/fill-docx-template/:idtemplate/pessoa/:idpessoa/epi', authenticate
 
 router.post('/fill-docx-template/batch', authenticateToken, fileUploadController.createFilledFilesBatch );
 
-
+router.post('/fill-docx-template/batch/epi', authenticateToken, fileUploadController.createFilledFilesBatchEPI );
 
 router.get('/templates/user/:userid', authenticateToken, fileUploadController.getTemplatesByUserId);
 
