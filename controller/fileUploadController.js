@@ -152,7 +152,7 @@ const UploadFile = async (req, res) => {
     try {
         // Gravar os detalhes do arquivo no banco de dados
         const connection = await pool.getConnection();
-        const query = 'INSERT INTO template (descricao, nome, createdAt, tipo, userid, tamanho,tipotemplate) VALUES (?, ?, ?, ?, ?, ?,?)';
+        const query = 'INSERT INTO template (descricao, nome, createdAt, tipo, userid, tamanho,tipoTemplate) VALUES (?, ?, ?, ?, ?, ?,?)';
         const values = [descricao, nomearquivo, new Date(), tipo, userId, tamanho,tipoTemplate];
         await connection.query(query, values);
 
