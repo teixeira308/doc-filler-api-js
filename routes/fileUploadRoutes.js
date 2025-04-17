@@ -16,13 +16,15 @@ const fileUploadController = require('../controller/fileUploadController');
 // Rota para upload de arquivo
 router.post('/templates', authenticateToken, fileUploadController.uploadSingleFile, fileUploadController.UploadFile);
 
+router.get('/templates/:id', authenticateToken, fileUploadController.getTemplateById);
+
 router.get('/fill-docx-template/:idtemplate/pessoa/:idpessoa', authenticateToken, fileUploadController.createFilledFile );
 
 router.post('/fill-docx-template/:idtemplate/pessoa/:idpessoa/epi', authenticateToken, fileUploadController.createFilledFileEpi );
 
 router.post('/fill-docx-template/batch', authenticateToken, fileUploadController.createFilledFilesBatch );
 
-router.get('/templates/:id', authenticateToken, fileUploadController.getTemplateById);
+
 
 router.get('/templates/user/:userid', authenticateToken, fileUploadController.getTemplatesByUserId);
 
