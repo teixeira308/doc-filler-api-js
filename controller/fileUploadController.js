@@ -521,6 +521,7 @@ const getTemplateById = async (req, res) => {
             return res.status(404).json({ message: 'Template não encontrado' });
         }
 
+        res.status(200).json(rows[0]);
 
     } catch (error) {
         console.error('Erro ao consultar o template:', error);
