@@ -17,6 +17,7 @@ router.put('/epi/:id', authenticateToken, EpiController.updateEpi);
 
 // Rota para deletar um EPI
 router.delete('/epi/:id', authenticateToken, EpiController.deleteEpi);
+
 router.post('/epi/import', authenticateToken, upload, EpiController.EpiFromExcel);
 
 module.exports = router;

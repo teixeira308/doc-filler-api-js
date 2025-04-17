@@ -153,7 +153,7 @@ const EpiFromExcel = async (req, res) => {
 
     for (const epi of epis) {
       epi.userId = userId;
-      await connection.query('INSERT INTO pessoa SET ?', epi);
+      await connection.query('INSERT INTO epi SET ?', epi);
     }
 
     connection.release();
