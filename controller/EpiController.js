@@ -130,10 +130,47 @@ deleteEpi = async (req, res) => {
   }
 };
 
+
+const EpiFromExcel = async (req, res) => {
+  try {
+    // Verifique se o arquivo foi enviado
+    if (!req.files || !req.files['file']) {
+      return res.status(400).json({ message: "Nenhum arquivo enviado" });
+    }
+
+
+    const workbook = xlsx.read(req.files['file'][0].buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const epis = xlsx.utils.sheet_to_json(sheet);
+
+    if (!epis.length) {
+      return res.status(400).json({ message: "O arquivo está vazio ou com formato inválido" });
+    }
+
+    const userId = req.userId;
+    const connection = await pool.getConnection();
+
+    for (const epi of epis) {
+      epi.userId = userId;
+      await connection.query('INSERT INTO pessoa SET ?', epi);
+    }
+
+    connection.release();
+    Logmessage(`Importação de ${epis.length} EPIs concluída.`);
+    res.status(201).json({ message: `${epis.length} Epis importadas com sucesso` });
+
+  } catch (error) {
+    Logmessage("Erro ao importar EPIs do Excel:", error);
+    res.status(500).json({ message: "Erro interno do servidor" });
+  }
+};
+
 module.exports = {
   createEpi,
   listEpis,
   getEpi,
   updateEpi,
   deleteEpi,
+  EpiFromExcel
 };
