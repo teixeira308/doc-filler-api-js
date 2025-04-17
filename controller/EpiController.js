@@ -9,7 +9,7 @@ createEpi = async (req, res) => {
 
   try {
     epiData.userId = userId;
-
+    Logmessage(epiData)
     const connection = await pool.getConnection();
     const [result] = await connection.query('INSERT INTO epis SET ?', epiData);
     connection.release();
