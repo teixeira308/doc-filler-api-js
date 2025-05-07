@@ -208,7 +208,24 @@ const importPessoasFromExcel = async (req, res) => {
     }
 };
 
+deleteAllPessoas = async (req, res) => {
+    const userId = req.userId; // Obtém o userId do token
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Deleta todas as pessoas pertencentes ao usuário
+        const [result] = await connection.query('DELETE FROM pessoa WHERE userId = ?', [userId]);
+        connection.release();
+
+        Logmessage(`Todas as pessoas do usuário ${userId} foram excluídas.`);
+        res.status(200).json({ message: `${result.affectedRows} pessoas excluídas com sucesso` });
+    } catch (error) {
+        Logmessage('Erro ao deletar todas as pessoas do banco de dados:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
 
 
 
-module.exports = { createPessoa, listAllPessoas, alterPessoa, deletePessoa, getPessoa, importPessoasFromExcel }
+module.exports = { createPessoa, listAllPessoas, alterPessoa, deletePessoa, getPessoa, importPessoasFromExcel,deleteAllPessoas }
