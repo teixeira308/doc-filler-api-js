@@ -183,7 +183,7 @@ const importPessoasFromExcel = async (req, res) => {
         const workbook = xlsx.read(req.files['file'][0].buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const pessoas = xlsx.utils.sheet_to_json(sheet);
+        const pessoas = xlsx.utils.sheet_to_json(sheet, { raw: false });
 
         if (!pessoas.length) {
             return res.status(400).json({ message: "O arquivo está vazio ou com formato inválido" });
