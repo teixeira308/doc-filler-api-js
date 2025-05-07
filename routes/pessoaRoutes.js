@@ -18,6 +18,6 @@ router.get('/pessoas/:id', authenticateToken, PessoaController.getPessoa );
 router.delete('/pessoas/:id', authenticateToken,PessoaController.deletePessoa);
 router.put('/pessoas/:id', authenticateToken,PessoaController.alterPessoa);
 router.post('/pessoas/import', authenticateToken, upload, PessoaController.importPessoasFromExcel);
-router.delete('/pessoas/:id/all', authenticateToken,PessoaController.deleteAllPessoas);
+router.delete('/pessoas/all', authenticateToken,PessoaController.deleteAllPessoas);
 
 module.exports = router;
