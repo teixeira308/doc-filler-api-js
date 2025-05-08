@@ -15,8 +15,8 @@ const upload = multer().fields([
 router.post('/pessoas', authenticateToken, PessoaController.createPessoa ); 
 router.get('/pessoas', authenticateToken, PessoaController.listAllPessoas );
 router.get('/pessoas/:id', authenticateToken, PessoaController.getPessoa );
-router.delete('/pessoas/delete-all', authenticateToken,PessoaController.deleteAllPessoas);
-router.delete('/pessoas/:id', authenticateToken,PessoaController.deletePessoa);
+router.delete('/pessoas/delete-all', authenticateToken, PessoaController.deleteAllPessoas);
+router.delete('/pessoas/:id', authenticateToken, PessoaController.deletePessoa);
 router.put('/pessoas/:id', authenticateToken,PessoaController.alterPessoa);
 router.post('/pessoas/import', authenticateToken, upload, PessoaController.importPessoasFromExcel);
 
