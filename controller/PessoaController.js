@@ -210,7 +210,7 @@ const importPessoasFromExcel = async (req, res) => {
 
 deleteAllPessoas = async (req, res) => {
     const userId = req.userId; // Obtém o userId do token
-
+    Logmessage("deletando todas as pessoas do usuario: ",userId)
     try {
         const connection = await pool.getConnection();
 
