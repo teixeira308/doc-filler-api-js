@@ -80,7 +80,7 @@ createFilledFile = async (req, res) => {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
-          });
+        });
 
         const dataToFill = {
             ...candidate,
@@ -153,7 +153,7 @@ const UploadFile = async (req, res) => {
         // Gravar os detalhes do arquivo no banco de dados
         const connection = await pool.getConnection();
         const query = 'INSERT INTO template (descricao, nome, createdAt, tipo, userid, tamanho,tipoTemplate) VALUES (?, ?, ?, ?, ?, ?,?)';
-        const values = [descricao, nomearquivo, new Date(), tipo, userId, tamanho,tipoTemplate];
+        const values = [descricao, nomearquivo, new Date(), tipo, userId, tamanho, tipoTemplate];
         await connection.query(query, values);
 
         // Buscar os dados recém-inseridos no banco de dados
@@ -260,7 +260,7 @@ const deleteTemplateFromDatabase = async (templateId, req, res) => {
     }
 };
 
-const UpdateFile = async(req,res) =>{
+const UpdateFile = async (req, res) => {
     const { id } = req.params; // Captura o ID do parâmetro da rota
     const newData = req.body; // Novos dados da pessoa a serem atualizados
     const userId = req.userId; // Obtém o userId do token
@@ -284,14 +284,14 @@ const UpdateFile = async(req,res) =>{
         await connection.query('UPDATE template SET ? WHERE id = ?', [newData, id]);
         connection.release();
 
-        Logmessage('Dados da template atualizados no banco de dados:'+ newData);
-        
+        Logmessage('Dados da template atualizados no banco de dados:' + newData);
+
         // Recupera os dados atualizados da pessoa do banco de dados
         const [updatedTemplate] = await pool.query('SELECT * FROM template WHERE id = ?', [id]);
-        
+
         res.status(200).json(updatedTemplate[0]); // Retorna somente os dados atualizados da pessoa
     } catch (error) {
-        Logmessage('Erro ao atualizar dados da template no banco de dados:'+ error);
+        Logmessage('Erro ao atualizar dados da template no banco de dados:' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 }
@@ -398,12 +398,12 @@ const createFilledFilesBatch = async (req, res) => {
 
         const now = new Date();
         const formattedDate = `${now.getDate().toString().padStart(2, '0')}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getFullYear()}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
-        
+
         res.setHeader('Content-Type', 'application/zip');
         res.setHeader(
-          'Content-Disposition',
-          `attachment; filename="arquivos_gerados_${formattedDate}.zip"`
-        );        
+            'Content-Disposition',
+            `attachment; filename="arquivos_gerados_${formattedDate}.zip"`
+        );
         return res.status(200).send(zipBuffer);
     } catch (error) {
         console.error('Erro ao gerar arquivos em lote:', error);
@@ -477,8 +477,8 @@ const createFilledFileEpi = async (req, res) => {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
-          });
-          
+        });
+
         // Injetando dados no template
         const dataToFill = {
             ...candidate,
@@ -531,9 +531,9 @@ const getTemplateById = async (req, res) => {
 
 const createFilledFilesBatchEPI = async (req, res) => {
     const userId = req.userId;
-    const { templateId, pessoaIds, grupoIds, epiIds } = req.body;
+    const { templateId, pessoaIds, grupoIds, epis } = req.body;
 
-    if (!Array.isArray(epiIds) || epiIds.length === 0) {
+    if (!Array.isArray(epis) || epis.length === 0) {
         return res.status(400).json({ message: 'A lista de EPIs (epiIds) é obrigatória.' });
     }
 
@@ -557,11 +557,22 @@ const createFilledFilesBatchEPI = async (req, res) => {
         const content = fs.readFileSync(templatePath, 'binary');
 
         // Buscar EPIs
+        const epiIds = epis.map(e => e.id);
         const epiPlaceholders = epiIds.map(() => '?').join(',');
         const [epiRows] = await connection.query(
             `SELECT * FROM epis WHERE id IN (${epiPlaceholders}) AND userId = ?`,
             [...epiIds, userId]
         );
+
+        // Anexar quantidade de cada EPI
+        const epiWithQuantidades = epiRows.map(epi => {
+            const matching = epis.find(e => e.id === epi.id);
+            return {
+                ...epi,
+                qtd: matching?.quantidade ?? 1
+            };
+        });
+
 
         if (!epiRows.length) {
             connection.release();
@@ -623,8 +634,9 @@ const createFilledFilesBatchEPI = async (req, res) => {
             const dataToFill = {
                 ...candidate,
                 dataGeracaoDocumento,
-                epis: epiRows
+                epis: epiWithQuantidades
             };
+
 
             doc.render(dataToFill);
             const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
@@ -664,4 +676,4 @@ const createFilledFilesBatchEPI = async (req, res) => {
 };
 
 
-module.exports = { getTemplatesById, createFilledFile,createFilledFilesBatchEPI, getTemplateById,UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile, createFilledFilesBatch,createFilledFileEpi };			
+module.exports = { getTemplatesById, createFilledFile, createFilledFilesBatchEPI, getTemplateById, UploadFile, uploadSingleFile, getTemplatesByUserId, deleteTemplateById, UpdateFile, createFilledFilesBatch, createFilledFileEpi };			
