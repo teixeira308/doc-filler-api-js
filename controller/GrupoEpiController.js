@@ -1,5 +1,6 @@
 const pool = require('../config/dbConfig');
 const { Logmessage } = require("../helper/Tools");
+const xlsx = require('xlsx');
 
 // Criar grupo de pessoa
 createGrupoEpi = async (req, res) => {
@@ -137,10 +138,47 @@ deleteGrupoEpi = async (req, res) => {
   }
 };
 
+const GrupoEpiFromExcel = async (req, res) => {
+  try {
+    // Verifique se o arquivo foi enviado
+    if (!req.files || !req.files['file']) {
+      return res.status(400).json({ message: "Nenhum arquivo enviado" });
+    }
+
+
+    const workbook = xlsx.read(req.files['file'][0].buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const grupo_epis = xlsx.utils.sheet_to_json(sheet);
+
+    if (!grupo_epis.length) {
+      return res.status(400).json({ message: "O arquivo está vazio ou com formato inválido" });
+    }
+
+    const userId = req.userId;
+    const connection = await pool.getConnection();
+
+    for (const grupo_epi of grupo_epis) {
+      grupo_epi.userId = userId;
+      await connection.query('INSERT INTO grupo_epi SET ?', grupo_epi);
+    }
+
+    connection.release();
+    Logmessage(`Importação de ${grupo_epis.length} EPIs concluída.`);
+    res.status(201).json({ message: `${grupo_epis.length} Grupo epi importado com sucesso` });
+
+  } catch (error) {
+    console.error("Erro ao importar Grupo epi do Excel:", error); // 👈 imprime o stack trace
+    Logmessage(`Erro ao importar Grupo epi do Excel: ${error.message}`); // 👈 registra a mensagem
+    res.status(500).json({ message: "Erro interno do servidor" });
+  }
+};
+
 module.exports = {
   createGrupoEpi,
   listGruposEpi,
   getGrupoEpi,
   updateGrupoEpi,
   deleteGrupoEpi,
+  GrupoEpiFromExcel,
 };
