@@ -5,6 +5,7 @@ const fileUploadRoutes = require('./routes/fileUploadRoutes');
 const userRoute = require('./routes/userRoutes');
 const cors = require('cors');
 const GrupoRoutes = require('./routes/GrupoRoutes')
+const GrupoEpiRoutes = require('./routes/GrupoRoutes')
 const epiRoutes = require('./routes/EpiRoutes')
 
 
@@ -19,6 +20,7 @@ app.use(cors({
 app.use('/v1', pessoaRoutes);
 app.use('/v1', fileUploadRoutes);
 app.use('/v1', GrupoRoutes);
+app.use('/v1', GrupoEpiRoutes);
 app.use('/v1', epiRoutes); 
 app.use('/v1/users', userRoute);
 

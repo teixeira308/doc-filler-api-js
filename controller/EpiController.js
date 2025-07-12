@@ -168,11 +168,35 @@ const EpiFromExcel = async (req, res) => {
   }
 };
 
+getEpiByGroup = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.userId;
+
+  try {
+    const connection = await pool.getConnection();
+    const [results] = await connection.query(
+      'SELECT * FROM epis WHERE grupo_epi = ? AND userId = ?',
+      [id, userId]
+    );
+    connection.release();
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'EPI não encontrado' });
+    }
+
+    res.status(200).json(results[0]);
+  } catch (error) {
+    Logmessage('Erro ao obter EPI:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+};
+
 module.exports = {
   createEpi,
   listEpis,
   getEpi,
   updateEpi,
   deleteEpi,
-  EpiFromExcel
+  EpiFromExcel,
+  getEpiByGroup
 };

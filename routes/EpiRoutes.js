@@ -17,6 +17,9 @@ router.get('/epi', authenticateToken, EpiController.listEpis);
 // Rota para obter um EPI específico
 router.get('/epi/:id', authenticateToken, EpiController.getEpi);
 
+// Rota para obter um EPI por grupo 
+router.get('/epi/grupo/:id', authenticateToken, EpiController.getEpiByGroup);
+
 // Rota para atualizar um EPI
 router.put('/epi/:id', authenticateToken, EpiController.updateEpi);
 
