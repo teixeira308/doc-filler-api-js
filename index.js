@@ -5,7 +5,7 @@ const fileUploadRoutes = require('./routes/fileUploadRoutes');
 const userRoute = require('./routes/userRoutes');
 const cors = require('cors');
 const GrupoRoutes = require('./routes/GrupoRoutes')
-const GrupoEpiRoutes = require('./routes/GrupoRoutes')
+const GrupoEpiRoutes = require('./routes/GrupoEpiRoutes')
 const epiRoutes = require('./routes/EpiRoutes')
 
 
