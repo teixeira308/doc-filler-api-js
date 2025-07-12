@@ -42,7 +42,7 @@ listEpis = async (req, res) => {
     const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
     const [results] = await connection.query(
-      'SELECT * FROM epis WHERE userId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?',
+      'SELECT e.*,g.nome as grupoepi_nome FROM epis e LEFT JOIN grupo_epi g ON e.grupoEpiId = g.id  WHERE e.userId = ? ORDER BY e.createdAt DESC LIMIT ? OFFSET ?',
       [userId, pageSize, offset]
     );
 
@@ -64,7 +64,7 @@ getEpi = async (req, res) => {
   try {
     const connection = await pool.getConnection();
     const [results] = await connection.query(
-      'SELECT * FROM epis WHERE id = ? AND userId = ?',
+      'SELECT e.*, g.nome as grupoepi_nome FROM epis e LEFT JOIN grupo_epi g ON e.grupoEpiId = g.id WHERE e.id = ? AND e.userId = ?',
       [id, userId]
     );
     connection.release();
