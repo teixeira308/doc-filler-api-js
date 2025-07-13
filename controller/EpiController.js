@@ -138,7 +138,7 @@ const EpiFromExcel = async (req, res) => {
     if (!req.files || !req.files['file']) {
       return res.status(400).json({ message: "Nenhum arquivo enviado" });
     }
-
+    const grupoId = req.body.grupoId;
 
     const workbook = xlsx.read(req.files['file'][0].buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
@@ -154,6 +154,7 @@ const EpiFromExcel = async (req, res) => {
 
     for (const epi of epis) {
       epi.userId = userId;
+      epi.grupoEpiId= grupoId;
       await connection.query('INSERT INTO epis SET ?', epi);
     }
 
