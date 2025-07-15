@@ -176,7 +176,7 @@ getEpiByGroup = async (req, res) => {
   try {
     const connection = await pool.getConnection();
     const [results] = await connection.query(
-      'SELECT * FROM epis WHERE grupo_epi = ? AND userId = ?',
+      'SELECT * FROM epis WHERE grupoEpiId = ? AND userId = ?',
       [id, userId]
     );
     connection.release();
