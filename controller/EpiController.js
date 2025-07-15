@@ -185,7 +185,7 @@ getEpiByGroup = async (req, res) => {
       return res.status(404).json({ message: 'EPI não encontrado' });
     }
 
-    res.status(200).json(results[0]);
+    res.status(200).json(results);
   } catch (error) {
     Logmessage('Erro ao obter EPI:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
