@@ -2,14 +2,14 @@ const pool = require('../config/dbConfig');
 const { Logmessage } = require("../helper/Tools");
 
 const createInteraction = async (req, res) => {
-    const { personId, fileId, epiIds } = req.body;
+    const { personId, templateId, epiIds } = req.body;
     const userId = req.userId;
 
     try {
         const newInteraction = {
             personId,
             userId,
-            fileId,
+            templateId,
             epiIds,
         };
 
