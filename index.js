@@ -6,7 +6,8 @@ const userRoute = require('./routes/userRoutes');
 const cors = require('cors');
 const GrupoRoutes = require('./routes/GrupoRoutes')
 const GrupoEpiRoutes = require('./routes/GrupoEpiRoutes')
-const epiRoutes = require('./routes/EpiRoutes')
+const epiRoutes = require('./routes/EpiRoutes');
+const interactionRoutes = require('./routes/interactionRoutes');
 
 
 // Middleware para analisar o corpo das solicitações e habilitar CORS
@@ -21,7 +22,8 @@ app.use('/v1', pessoaRoutes);
 app.use('/v1', fileUploadRoutes);
 app.use('/v1', GrupoRoutes);
 app.use('/v1', GrupoEpiRoutes);
-app.use('/v1', epiRoutes); 
+app.use('/v1', epiRoutes);
+app.use('/v1', interactionRoutes); 
 app.use('/v1/users', userRoute);
 
 app.use(express.urlencoded({
