@@ -2,15 +2,14 @@ const pool = require('../config/dbConfig');
 const { Logmessage } = require("../helper/Tools");
 
 const createInteraction = async (req, res) => {
-    const { data_used, templateId, epiIds } = req.body;
+    const { data_used, templateId } = req.body;
     const userId = req.userId;
 
     try {
         const newInteraction = {
             data_used,
             userId,
-            templateId,
-            epiIds,
+            templateId, 
         };
 
         const connection = await pool.getConnection();
