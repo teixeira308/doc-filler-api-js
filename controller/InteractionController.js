@@ -21,7 +21,7 @@ const createInteraction = async (req, res) => {
 
         res.status(201).json({ ...newInteraction, id: interactionId });
     } catch (error) {
-        Logmessage('Erro ao criar interação:', error);
+        Logmessage('Erro ao criar interação:'+ error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
@@ -52,7 +52,7 @@ const listInteractions = async (req, res) => {
         res.header('X-Total-Count', totalCount[0].total);
         res.status(200).json({ data: results, page, pageSize, totalPages });
     } catch (error) {
-        Logmessage('Erro ao listar interações:', error);
+        Logmessage('Erro ao listar interações:'+ error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
