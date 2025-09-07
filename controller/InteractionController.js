@@ -8,7 +8,7 @@ const createInteraction = async (req, res) => {
     const data_used_json = JSON.stringify(data_used)
     try {
         const newInteraction = {
-            data_used_json,
+            data_used: data_used_json,
             userId,
             templateId, 
         };
