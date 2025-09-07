@@ -393,6 +393,23 @@ const createFilledFilesBatch = async (req, res) => {
             }
         }
 
+        try {
+            const data_used = {
+                pessoaIds,
+                grupoIds
+            };
+            // Gravar os detalhes do arquivo no banco de dados
+            const connection = await pool.getConnection();
+            const query = 'INSERT INTO interaction (templateId, userId,data_used ) VALUES (?, ?, ?)';
+            const values = [templateId, userId, JSON.stringify(data_used)];
+            await connection.query(query, values);
+            connection.release();
+
+        } catch (error) {
+            console.error('Erro ao inserir interaction: ', error);
+            return res.status(500).json({ message: 'Erro interno do servidor' });
+        }
+
         // Gera o ZIP
         const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
 
@@ -492,6 +509,23 @@ const createFilledFileEpi = async (req, res) => {
             type: "nodebuffer",
             compression: "DEFLATE",
         });
+
+        try {
+            const data_used = {
+                epiIds,
+                personID: candidateId
+            };
+            // Gravar os detalhes do arquivo no banco de dados
+            const connection = await pool.getConnection();
+            const query = 'INSERT INTO interaction (templateId, userId,data_used ) VALUES (?, ?, ?)';
+            const values = [templateId, userId, JSON.stringify(data_used)];
+            await connection.query(query, values);
+            connection.release();
+
+        } catch (error) {
+            console.error('Erro ao inserir interaction: ', error);
+            return res.status(500).json({ message: 'Erro interno do servidor' });
+        }
 
         res.setHeader("Access-Control-Allow-Origin", "*")
             .setHeader("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token")
@@ -663,6 +697,24 @@ const createFilledFilesBatchEPI = async (req, res) => {
         const now = new Date();
         const formattedDate = `${now.getDate().toString().padStart(2, '0')}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getFullYear()}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
 
+         try {
+            const data_used = {
+               personId:pessoaIds, 
+               grupoIds, 
+               epis
+            };
+            // Gravar os detalhes do arquivo no banco de dados
+            const connection = await pool.getConnection();
+            const query = 'INSERT INTO interaction (templateId, userId,data_used ) VALUES (?, ?, ?)';
+            const values = [templateId, userId, JSON.stringify(data_used)];
+            await connection.query(query, values);
+            connection.release();
+
+        } catch (error) {
+            console.error('Erro ao inserir interaction: ', error);
+            return res.status(500).json({ message: 'Erro interno do servidor' });
+        }
+        
         res.setHeader('Content-Type', 'application/zip');
         res.setHeader(
             'Content-Disposition',
