@@ -10,7 +10,7 @@ const createInteraction = async (req, res) => {
         const newInteraction = {
             data_used: data_used_json,
             userId,
-            templateId, 
+            templateId,
         };
 
         const connection = await pool.getConnection();
@@ -21,7 +21,7 @@ const createInteraction = async (req, res) => {
 
         res.status(201).json({ ...newInteraction, id: interactionId });
     } catch (error) {
-        Logmessage('Erro ao criar interação:'+ error);
+        Logmessage('Erro ao criar interação:' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
@@ -30,7 +30,7 @@ const listInteractions = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const userId = req.userId;
-    
+
     try {
         const connection = await pool.getConnection();
 
@@ -46,14 +46,24 @@ const listInteractions = async (req, res) => {
             '    SELECT t.descricao,t.tipoTemplate,i.data_used,i.createdAt FROM interactions i, template t WHERE t.id=i.templateId and i.userId = ? ORDER BY i.createdAt DESC LIMIT ? OFFSET ?',
             [userId, pageSize, offset]
         );
-      // Enriquecer os dados
+        // Enriquecer os dados
         for (const row of results) {
-            const data = JSON.parse(row.data_used);
+            // Parse seguro do JSON
+            let data;
+            if (typeof row.data_used === "string") {
+                try {
+                    data = JSON.parse(row.data_used);
+                } catch (e) {
+                    data = {};
+                }
+            } else {
+                data = row.data_used;
+            }
 
-            // --- Pessoa (se existir personId) ---
+            // --- Pessoa ---
             if (data.personId) {
                 const [person] = await connection.query(
-                    'SELECT id,nome FROM pessoa WHERE id = ?',
+                    'SELECT id, nome FROM persons WHERE id = ?',
                     [data.personId]
                 );
                 row.person = person.length ? person[0] : null;
@@ -61,17 +71,13 @@ const listInteractions = async (req, res) => {
                 row.person = null;
             }
 
-            // --- EPIs (se existir epis) ---
+            // --- EPIs ---
             if (Array.isArray(data.epis) && data.epis.length > 0) {
-                // Remove duplicados para query
                 const uniqueEpiIds = [...new Set(data.epis)];
-
                 const [epis] = await connection.query(
                     `SELECT id, nome FROM epis WHERE id IN (?)`,
                     [uniqueEpiIds]
                 );
-
-                // Reconstrói lista preservando ordem e repetição
                 row.epis = data.epis.map(id => {
                     const match = epis.find(e => e.id === id);
                     return match ? match : { id, nome: null };
@@ -80,17 +86,15 @@ const listInteractions = async (req, res) => {
                 row.epis = [];
             }
 
-            // Guarda também o JSON original
             row.data_used = data;
         }
-
 
         connection.release();
 
         res.header('X-Total-Count', totalCount[0].total);
         res.status(200).json({ data: results, page, pageSize, totalPages });
     } catch (error) {
-        Logmessage('Erro ao listar interações:'+ error);
+        Logmessage('Erro ao listar interações:' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
