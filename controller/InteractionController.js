@@ -46,7 +46,7 @@ const listInteractions = async (req, res) => {
             '    SELECT t.descricao,t.tipoTemplate,i.data_used,i.createdAt FROM interactions i, template t WHERE t.id=i.templateId and i.userId = ? ORDER BY i.createdAt DESC LIMIT ? OFFSET ?',
             [userId, pageSize, offset]
         );
-        Logmessage(results)
+        Logmessage(results[0].data_used)
         connection.release();
 
         res.header('X-Total-Count', totalCount[0].total);
