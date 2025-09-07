@@ -46,30 +46,44 @@ const listInteractions = async (req, res) => {
             '    SELECT t.descricao,t.tipoTemplate,i.data_used,i.createdAt FROM interactions i, template t WHERE t.id=i.templateId and i.userId = ? ORDER BY i.createdAt DESC LIMIT ? OFFSET ?',
             [userId, pageSize, offset]
         );
-       for (const row of results) {
+      // Enriquecer os dados
+        for (const row of results) {
             const data = JSON.parse(row.data_used);
 
-            // Busca pessoa (se existir personId no JSON)
+            // --- Pessoa (se existir personId) ---
             if (data.personId) {
                 const [person] = await connection.query(
-                    'SELECT nome FROM pessoa WHERE id = ?',
+                    'SELECT id, nome FROM persons WHERE id = ?',
                     [data.personId]
                 );
-                row.person = person.length ? person[0].nome : null;
+                row.person = person.length ? person[0] : null;
+            } else {
+                row.person = null;
             }
 
-            // Busca EPIs (se existir epiIds no JSON)
-            if (data.epiIds && data.epiIds.length > 0) {
+            // --- EPIs (se existir epis) ---
+            if (Array.isArray(data.epis) && data.epis.length > 0) {
+                // Remove duplicados para query
+                const uniqueEpiIds = [...new Set(data.epis)];
+
                 const [epis] = await connection.query(
                     `SELECT id, nome FROM epis WHERE id IN (?)`,
-                    [data.epiIds]
+                    [uniqueEpiIds]
                 );
-                row.epis = epis;
+
+                // Reconstrói lista preservando ordem e repetição
+                row.epis = data.epis.map(id => {
+                    const match = epis.find(e => e.id === id);
+                    return match ? match : { id, nome: null };
+                });
+            } else {
+                row.epis = [];
             }
 
-            // Sobrescreve data_used já convertido
+            // Guarda também o JSON original
             row.data_used = data;
         }
+
 
         connection.release();
 
