@@ -46,7 +46,31 @@ const listInteractions = async (req, res) => {
             '    SELECT t.descricao,t.tipoTemplate,i.data_used,i.createdAt FROM interactions i, template t WHERE t.id=i.templateId and i.userId = ? ORDER BY i.createdAt DESC LIMIT ? OFFSET ?',
             [userId, pageSize, offset]
         );
-        Logmessage(results[0].data_used)
+       for (const row of results) {
+            const data = JSON.parse(row.data_used);
+
+            // Busca pessoa (se existir personId no JSON)
+            if (data.personId) {
+                const [person] = await connection.query(
+                    'SELECT nome FROM pessoa WHERE id = ?',
+                    [data.personId]
+                );
+                row.person = person.length ? person[0].nome : null;
+            }
+
+            // Busca EPIs (se existir epiIds no JSON)
+            if (data.epiIds && data.epiIds.length > 0) {
+                const [epis] = await connection.query(
+                    `SELECT id, nome FROM epis WHERE id IN (?)`,
+                    [data.epiIds]
+                );
+                row.epis = epis;
+            }
+
+            // Sobrescreve data_used já convertido
+            row.data_used = data;
+        }
+
         connection.release();
 
         res.header('X-Total-Count', totalCount[0].total);
