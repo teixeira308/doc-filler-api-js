@@ -43,7 +43,7 @@ const listInteractions = async (req, res) => {
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
         const [results] = await connection.query(
-            '    SELECT t.descricao,t.tipoTemplate,i.createdAt FROM interactions i, template t WHERE t.id=i.templateId and i.userId = ? ORDER BY i.createdAt DESC LIMIT ? OFFSET ?',
+            '    SELECT t.descricao,t.tipoTemplate,i.data_used,i.createdAt FROM interactions i, template t WHERE t.id=i.templateId and i.userId = ? ORDER BY i.createdAt DESC LIMIT ? OFFSET ?',
             [userId, pageSize, offset]
         );
         // Enriquecer os dados
