@@ -63,7 +63,7 @@ const listInteractions = async (req, res) => {
             // --- Pessoa ---
             if (data.personId) {
                 const [person] = await connection.query(
-                    'SELECT id, nome FROM persons WHERE id = ?',
+                    'SELECT id, nome FROM pessoa WHERE id = ?',
                     [data.personId]
                 );
                 row.person = person.length ? person[0] : null;
