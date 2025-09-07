@@ -2,12 +2,12 @@ const pool = require('../config/dbConfig');
 const { Logmessage } = require("../helper/Tools");
 
 const createInteraction = async (req, res) => {
-    const { personId, templateId, epiIds } = req.body;
+    const { data_used, templateId, epiIds } = req.body;
     const userId = req.userId;
 
     try {
         const newInteraction = {
-            personId,
+            data_used,
             userId,
             templateId,
             epiIds,
@@ -30,7 +30,7 @@ const listInteractions = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const userId = req.userId;
-
+    
     try {
         const connection = await pool.getConnection();
 
