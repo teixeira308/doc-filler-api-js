@@ -94,10 +94,11 @@ createFilledFile = async (req, res) => {
             compression: "DEFLATE",
         });
 
-          try {
+        try {
             const data_used = {
-                pessoaIds: [candidateId], // padronizando sempre em array
-                grupoIds: []              // vazio porque aqui não tem grupo
+                pessoaIds: pessoaId ? [pessoaId] : [],
+                grupoIds: [],
+                epis: []
             };
 
             const connection = await pool.getConnection();
@@ -110,7 +111,7 @@ createFilledFile = async (req, res) => {
             return res.status(500).json({ message: 'Erro interno do servidor' });
         }
 
-        
+
         // Enviando o arquivo preenchido como resposta
         res.setHeader("Access-Control-Allow-Origin", "*")
             .setHeader("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token")
@@ -412,8 +413,9 @@ const createFilledFilesBatch = async (req, res) => {
 
         try {
             const data_used = {
-                pessoaIds: Array.isArray(pessoaIds) ? pessoaIds : [],
-                grupoIds: Array.isArray(grupoIds) ? grupoIds : []
+                pessoaIds,
+                grupoIds,
+                epis: []
             };
             // Gravar os detalhes do arquivo no banco de dados
             const connection = await pool.getConnection();
@@ -529,8 +531,11 @@ const createFilledFileEpi = async (req, res) => {
 
         try {
             const data_used = {
-                pessoaId: candidateId,        // singular, já que é só 1 pessoa
-                epiIds: epiIds && epiIds.length > 0 ? epiIds : []
+                pessoaIds: pessoaId ? [pessoaId] : [],
+                grupoIds: [],
+                epis: Array.isArray(epis)
+                    ? epis.map(id => ({ id, quantidade: 1 }))
+                    : []
             };
             // Gravar os detalhes do arquivo no banco de dados
             const connection = await pool.getConnection();
@@ -716,9 +721,13 @@ const createFilledFilesBatchEPI = async (req, res) => {
 
         try {
             const data_used = {
-                pessoaIds: pessoaIds && pessoaIds.length > 0 ? pessoaIds : [],
-                grupoIds: grupoIds && grupoIds.length > 0 ? grupoIds : [],
-                epis: epis && epis.length > 0 ? epis : []
+                pessoaIds,
+                grupoIds,
+                epis: Array.isArray(epis)
+                    ? epis.map(epi =>
+                        typeof epi === "object" ? epi : { id: epi, quantidade: 1 }
+                    )
+                    : []
             };
             // Gravar os detalhes do arquivo no banco de dados
             const connection = await pool.getConnection();
