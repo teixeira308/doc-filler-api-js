@@ -27,76 +27,99 @@ const createInteraction = async (req, res) => {
 };
 
 const listInteractions = async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
-    const userId = req.userId;
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const userId = req.userId;
 
-    try {
-        const connection = await pool.getConnection();
+  try {
+    const connection = await pool.getConnection();
 
-        const [totalCount] = await connection.query(
-            'SELECT COUNT(*) as total FROM interactions WHERE userId = ?',
-            [userId]
-        );
+    const [totalCount] = await connection.query(
+      "SELECT COUNT(*) as total FROM interactions WHERE userId = ?",
+      [userId]
+    );
 
-        const offset = (page - 1) * pageSize;
-        const totalPages = Math.ceil(totalCount[0].total / pageSize);
+    const offset = (page - 1) * pageSize;
+    const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query(
-            '    SELECT t.descricao,t.tipoTemplate,i.data_used,i.createdAt FROM interactions i, template t WHERE t.id=i.templateId and i.userId = ? ORDER BY i.createdAt DESC LIMIT ? OFFSET ?',
-            [userId, pageSize, offset]
-        );
-        // Enriquecer os dados
-        for (const row of results) {
-            // Parse seguro do JSON
-            let data;
-            if (typeof row.data_used === "string") {
-                try {
-                    data = JSON.parse(row.data_used);
-                } catch (e) {
-                    data = {};
-                }
-            } else {
-                data = row.data_used;
-            }
+    const [results] = await connection.query(
+      `SELECT t.descricao, t.tipoTemplate, i.data_used, i.createdAt
+       FROM interactions i
+       JOIN template t ON t.id = i.templateId
+       WHERE i.userId = ?
+       ORDER BY i.createdAt DESC
+       LIMIT ? OFFSET ?`,
+      [userId, pageSize, offset]
+    );
 
-            // --- Pessoa ---
-            if (data.personId) {
-                const [person] = await connection.query(
-                    'SELECT id, nome FROM pessoa WHERE id = ?',
-                    [data.personId]
-                );
-                row.person = person.length ? person[0] : null;
-            } else {
-                row.person = null;
-            }
-
-            // --- EPIs ---
-            if (Array.isArray(data.epis) && data.epis.length > 0) {
-                const uniqueEpiIds = [...new Set(data.epis)];
-                const [epis] = await connection.query(
-                    `SELECT id, nome FROM epis WHERE id IN (?)`,
-                    [uniqueEpiIds]
-                );
-                row.epis = data.epis.map(id => {
-                    const match = epis.find(e => e.id === id);
-                    return match ? match : { id, nome: null };
-                });
-            } else {
-                row.epis = [];
-            }
-
-            row.data_used = data;
+    for (const row of results) {
+      let data;
+      if (typeof row.data_used === "string") {
+        try {
+          data = JSON.parse(row.data_used);
+        } catch (e) {
+          data = {};
         }
+      } else {
+        data = row.data_used || {};
+      }
 
-        connection.release();
+      // --- Pessoas ---
+      if (Array.isArray(data.pessoaIds) && data.pessoaIds.length > 0) {
+        const [pessoas] = await connection.query(
+          "SELECT id, nome FROM pessoa WHERE id IN (?)",
+          [data.pessoaIds]
+        );
+        row.pessoas = pessoas;
+      } else {
+        row.pessoas = [];
+      }
 
-        res.header('X-Total-Count', totalCount[0].total);
-        res.status(200).json({ data: results, page, pageSize, totalPages });
-    } catch (error) {
-        Logmessage('Erro ao listar interações:' + error);
-        res.status(500).json({ message: 'Erro interno do servidor' });
+      // --- Grupos ---
+      if (Array.isArray(data.grupoIds) && data.grupoIds.length > 0) {
+        const [grupos] = await connection.query(
+          "SELECT id, nome FROM grupo_pessoa WHERE id IN (?)",
+          [data.grupoIds]
+        );
+        row.grupos = grupos;
+      } else {
+        row.grupos = [];
+      }
+
+      // --- EPIs ---
+      if (Array.isArray(data.epis) && data.epis.length > 0) {
+        const epiIds = data.epis.map((e) => e.id);
+        const [episDb] = await connection.query(
+          "SELECT id, nome FROM epis WHERE id IN (?)",
+          [epiIds]
+        );
+
+        row.epis = data.epis.map((e) => {
+          const match = episDb.find((db) => db.id === e.id);
+          return {
+            id: e.id,
+            nome: match ? match.nome : null,
+            quantidade: e.quantidade || 1,
+          };
+        });
+      } else {
+        row.epis = [];
+      }
+
+      row.data_used = data;
     }
+
+    connection.release();
+
+    res.header("X-Total-Count", totalCount[0].total);
+    res
+      .status(200)
+      .json({ data: results, page, pageSize, totalPages });
+  } catch (error) {
+    Logmessage("Erro ao listar interações:" + error);
+    res.status(500).json({ message: "Erro interno do servidor" });
+  }
 };
+
 
 module.exports = { createInteraction, listInteractions };
