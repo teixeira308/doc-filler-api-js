@@ -94,6 +94,23 @@ createFilledFile = async (req, res) => {
             compression: "DEFLATE",
         });
 
+          try {
+            const data_used = {
+                pessoaIds: [candidateId], // padronizando sempre em array
+                grupoIds: []              // vazio porque aqui não tem grupo
+            };
+
+            const connection = await pool.getConnection();
+            const query = 'INSERT INTO interactions (templateId, userId, data_used) VALUES (?, ?, ?)';
+            const values = [templateId, userId, JSON.stringify(data_used)];
+            await connection.query(query, values);
+            connection.release();
+        } catch (error) {
+            console.error('Erro ao inserir interaction: ', error);
+            return res.status(500).json({ message: 'Erro interno do servidor' });
+        }
+
+        
         // Enviando o arquivo preenchido como resposta
         res.setHeader("Access-Control-Allow-Origin", "*")
             .setHeader("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token")
@@ -395,8 +412,8 @@ const createFilledFilesBatch = async (req, res) => {
 
         try {
             const data_used = {
-                pessoaIds,
-                grupoIds
+                pessoaIds: Array.isArray(pessoaIds) ? pessoaIds : [],
+                grupoIds: Array.isArray(grupoIds) ? grupoIds : []
             };
             // Gravar os detalhes do arquivo no banco de dados
             const connection = await pool.getConnection();
@@ -512,8 +529,8 @@ const createFilledFileEpi = async (req, res) => {
 
         try {
             const data_used = {
-                epiIds,
-                personID: candidateId
+                pessoaId: candidateId,        // singular, já que é só 1 pessoa
+                epiIds: epiIds && epiIds.length > 0 ? epiIds : []
             };
             // Gravar os detalhes do arquivo no banco de dados
             const connection = await pool.getConnection();
@@ -697,11 +714,11 @@ const createFilledFilesBatchEPI = async (req, res) => {
         const now = new Date();
         const formattedDate = `${now.getDate().toString().padStart(2, '0')}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getFullYear()}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
 
-         try {
+        try {
             const data_used = {
-               personId:pessoaIds, 
-               grupoIds, 
-               epis
+                pessoaIds: pessoaIds && pessoaIds.length > 0 ? pessoaIds : [],
+                grupoIds: grupoIds && grupoIds.length > 0 ? grupoIds : [],
+                epis: epis && epis.length > 0 ? epis : []
             };
             // Gravar os detalhes do arquivo no banco de dados
             const connection = await pool.getConnection();
@@ -714,7 +731,7 @@ const createFilledFilesBatchEPI = async (req, res) => {
             console.error('Erro ao inserir interaction: ', error);
             return res.status(500).json({ message: 'Erro interno do servidor' });
         }
-        
+
         res.setHeader('Content-Type', 'application/zip');
         res.setHeader(
             'Content-Disposition',
