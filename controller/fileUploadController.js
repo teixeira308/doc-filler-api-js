@@ -413,7 +413,9 @@ const createFilledFilesBatch = async (req, res) => {
 
         try {
             const data_used = {
-                pessoaIds,
+                pessoaIds: (pessoaIds && pessoaIds.length > 0)
+                    ? pessoaIds
+                    : candidates.map(c => c.id), // todos os IDs gerados
                 grupoIds,
                 epis: []
             };
