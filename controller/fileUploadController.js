@@ -400,7 +400,7 @@ const createFilledFilesBatch = async (req, res) => {
             };
             // Gravar os detalhes do arquivo no banco de dados
             const connection = await pool.getConnection();
-            const query = 'INSERT INTO interaction (templateId, userId,data_used ) VALUES (?, ?, ?)';
+            const query = 'INSERT INTO interactions (templateId, userId,data_used ) VALUES (?, ?, ?)';
             const values = [templateId, userId, JSON.stringify(data_used)];
             await connection.query(query, values);
             connection.release();
@@ -517,7 +517,7 @@ const createFilledFileEpi = async (req, res) => {
             };
             // Gravar os detalhes do arquivo no banco de dados
             const connection = await pool.getConnection();
-            const query = 'INSERT INTO interaction (templateId, userId,data_used ) VALUES (?, ?, ?)';
+            const query = 'INSERT INTO interactions (templateId, userId,data_used ) VALUES (?, ?, ?)';
             const values = [templateId, userId, JSON.stringify(data_used)];
             await connection.query(query, values);
             connection.release();
@@ -705,7 +705,7 @@ const createFilledFilesBatchEPI = async (req, res) => {
             };
             // Gravar os detalhes do arquivo no banco de dados
             const connection = await pool.getConnection();
-            const query = 'INSERT INTO interaction (templateId, userId,data_used ) VALUES (?, ?, ?)';
+            const query = 'INSERT INTO interactions (templateId, userId,data_used ) VALUES (?, ?, ?)';
             const values = [templateId, userId, JSON.stringify(data_used)];
             await connection.query(query, values);
             connection.release();
