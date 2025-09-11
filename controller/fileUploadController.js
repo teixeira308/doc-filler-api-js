@@ -724,9 +724,12 @@ const createFilledFilesBatchEPI = async (req, res) => {
 
         try {
             const data_used = {
-                pessoaIds: (pessoaIds && pessoaIds.length > 0)
-                    ? pessoaIds
-                    : "todos", // todos os IDs gerados
+                pessoaIds:
+                    (pessoaIds && pessoaIds.length > 0)
+                        ? pessoaIds
+                        : (!grupoIds || grupoIds.length === 0)
+                            ? "todos"
+                            : [],
                 grupoIds,
                 epis: Array.isArray(epis)
                     ? epis.map(epi =>
@@ -734,6 +737,7 @@ const createFilledFilesBatchEPI = async (req, res) => {
                     )
                     : []
             };
+
             // Gravar os detalhes do arquivo no banco de dados
             const connection = await pool.getConnection();
             const query = 'INSERT INTO interactions (templateId, userId,data_used ) VALUES (?, ?, ?)';
