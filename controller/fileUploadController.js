@@ -723,7 +723,9 @@ const createFilledFilesBatchEPI = async (req, res) => {
 
         try {
             const data_used = {
-                pessoaIds,
+                pessoaIds: (pessoaIds && pessoaIds.length > 0)
+                    ? pessoaIds
+                    : "todos", // todos os IDs gerados
                 grupoIds,
                 epis: Array.isArray(epis)
                     ? epis.map(epi =>
