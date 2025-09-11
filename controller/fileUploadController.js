@@ -590,6 +590,7 @@ const getTemplateById = async (req, res) => {
 const createFilledFilesBatchEPI = async (req, res) => {
     const userId = req.userId;
     const { templateId, pessoaIds, grupoIds, epis } = req.body;
+    Logmessage(req.body)
 
     if (!Array.isArray(epis) || epis.length === 0) {
         return res.status(400).json({ message: 'A lista de EPIs (epiIds) é obrigatória.' });
