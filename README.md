@@ -1,19 +1,19 @@
 # Doc Filler API JS
 
-Backend em Node.js/Express para cadastro de pessoas, grupos, EPIs, upload de templates `.docx` e geração automática de documentos preenchidos a partir de dados salvos no MySQL.
+Node.js/Express backend for managing people, groups, PPE items, `.docx` template uploads, and automatic document generation based on data stored in MySQL.
 
-## Visão Geral
+## Overview
 
-O projeto expõe uma API REST protegida por JWT. Cada usuário autenticado opera sobre seu próprio conjunto de dados:
+The project exposes a JWT-protected REST API. Each authenticated user works only with their own data set:
 
-- pessoas
-- grupos de pessoas
-- grupos de EPI
-- EPIs
-- templates de documentos
-- histórico de interações/gerações
+- people
+- people groups
+- PPE groups
+- PPE items
+- document templates
+- generation/interaction history
 
-Os templates são armazenados em disco na pasta `uploads/` e seus metadados ficam no banco. Na geração, o backend busca os dados da pessoa e/ou dos EPIs, injeta no `.docx` com `docxtemplater` e devolve o arquivo preenchido.
+Template files are stored on disk under `uploads/`, while their metadata is stored in the database. During document generation, the backend fetches person and/or PPE data, injects it into a `.docx` template with `docxtemplater`, and returns the generated file.
 
 ## Stack
 
@@ -27,7 +27,7 @@ Os templates são armazenados em disco na pasta `uploads/` e seus metadados fica
 - `xlsx`
 - CORS
 
-## Estrutura
+## Project Structure
 
 ```text
 .
@@ -42,15 +42,15 @@ Os templates são armazenados em disco na pasta `uploads/` e seus metadados fica
 └── README.md
 ```
 
-## Como Executar
+## Running Locally
 
-1. Instale as dependências:
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. Crie o arquivo `.env` na raiz:
+2. Create a `.env` file in the project root:
 
 ```env
 PORT=3000
@@ -58,36 +58,36 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=doc_filler
 DB_USER=root
-DB_PASS=senha
-JWT_SECRET=sua_chave_jwt
+DB_PASS=password
+JWT_SECRET=your_jwt_secret
 ```
 
-3. Garanta que o MySQL esteja disponível e que o schema/tabelas do projeto já existam.
+3. Make sure MySQL is available and that the project schema/tables already exist.
 
-4. Crie a pasta de uploads se ela ainda não existir:
+4. Create the uploads directory if it does not exist yet:
 
 ```bash
 mkdir -p uploads
 ```
 
-5. Inicie a aplicação:
+5. Start the application:
 
 ```bash
 npm start
 ```
 
-Servidor padrão: `http://localhost:3000`
+Default server URL: `http://localhost:3000`
 
-## Configuração Atual da API
+## Current API Configuration
 
-- Prefixo principal das rotas: `/v1`
-- Rotas de usuário: `/v1/users`
-- CORS liberado para `http://localhost:3001`
-- Autenticação via header `Authorization: Bearer <token>`
+- Main route prefix: `/v1`
+- User routes: `/v1/users`
+- CORS currently allows `http://localhost:3001`
+- Authentication uses `Authorization: Bearer <token>`
 
-## Fluxos
+## Flows
 
-### 1. Autenticação
+### 1. Authentication
 
 ```mermaid
 sequenceDiagram
@@ -97,28 +97,28 @@ sequenceDiagram
     participant DB
 
     Client->>API: POST /v1/users/register
-    API->>DB: valida email e grava senha com bcrypt
-    DB-->>API: usuário criado
-    API-->>Client: 201 criado
+    API->>DB: validate email and store bcrypt password hash
+    DB-->>API: user created
+    API-->>Client: 201 created
 
     Client->>API: POST /v1/users/login
-    API->>DB: busca usuário ativo por email
-    DB-->>API: usuário + hash
-    API->>API: valida senha e gera JWT
+    API->>DB: fetch active user by email
+    DB-->>API: user + password hash
+    API->>API: validate password and generate JWT
     API-->>Client: token + userId
 ```
 
-### 2. Cadastro e Organização de Dados
+### 2. Data Registration and Organization
 
 ```mermaid
 flowchart TD
-    A[Usuário autenticado] --> B[Cadastra grupo de pessoas]
-    A --> C[Cadastra pessoas manualmente]
-    A --> D[Importa pessoas via Excel]
-    A --> E[Cadastra grupo de EPI]
-    A --> F[Cadastra EPIs]
-    A --> G[Importa grupos de EPI via Excel]
-    A --> H[Importa EPIs via Excel]
+    A[Authenticated user] --> B[Create people group]
+    A --> C[Create people manually]
+    A --> D[Import people from Excel]
+    A --> E[Create PPE group]
+    A --> F[Create PPE items]
+    A --> G[Import PPE groups from Excel]
+    A --> H[Import PPE items from Excel]
 
     B --> C
     B --> D
@@ -126,7 +126,7 @@ flowchart TD
     E --> H
 ```
 
-### 3. Upload e Geração de Documento
+### 3. Template Upload and Document Generation
 
 ```mermaid
 sequenceDiagram
@@ -137,60 +137,60 @@ sequenceDiagram
     participant DB
 
     Client->>API: POST /v1/templates
-    API->>FS: salva arquivo .docx
-    API->>DB: grava metadata do template
-    API-->>Client: template cadastrado
+    API->>FS: save .docx file
+    API->>DB: persist template metadata
+    API-->>Client: template created
 
     Client->>API: GET /v1/fill-docx-template/:idtemplate/pessoa/:idpessoa
-    API->>DB: busca pessoa + template
-    API->>FS: lê template .docx
-    API->>API: renderiza placeholders
-    API->>DB: registra interaction
-    API-->>Client: arquivo .docx preenchido
+    API->>DB: fetch person + template
+    API->>FS: read .docx template
+    API->>API: render placeholders
+    API->>DB: store interaction
+    API-->>Client: generated .docx file
 ```
 
-### 4. Geração em Lote
+### 4. Batch Generation
 
 ```mermaid
 flowchart LR
-    A[Cliente envia templateId] --> B{Filtros}
+    A[Client sends templateId] --> B{Filters}
     B --> C[pessoaIds]
     B --> D[grupoIds]
     B --> E[epis]
 
-    C --> F[Busca pessoas]
+    C --> F[Fetch people]
     D --> F
-    E --> G[Busca EPIs]
+    E --> G[Fetch PPE items]
 
-    F --> H[Renderiza um DOCX por pessoa]
+    F --> H[Render one DOCX per person]
     G --> H
-    H --> I[Agrupa arquivos por nome do grupo]
-    I --> J[Gera ZIP]
-    J --> K[Registra interaction]
-    K --> L[Retorna ZIP]
+    H --> I[Group files by group name]
+    I --> J[Generate ZIP]
+    J --> K[Store interaction]
+    K --> L[Return ZIP]
 ```
 
-## Entidades Principais
+## Main Entities
 
-- `user`: autenticação e status do usuário
-- `pessoa`: dados da pessoa vinculados ao `userId` e opcionalmente a `grupoId`
-- `grupo_pessoa`: agrupamento de pessoas por usuário
-- `grupo_epi`: agrupamento de EPIs por usuário
-- `epis`: itens de EPI vinculados a `grupoEpiId` e `userId`
-- `template`: metadados do arquivo de template salvo em `uploads/`
-- `interactions`: histórico das gerações, incluindo `data_used`
+- `user`: user authentication and status
+- `pessoa`: person data linked to `userId` and optionally `grupoId`
+- `grupo_pessoa`: user-owned people group
+- `grupo_epi`: user-owned PPE group
+- `epis`: PPE item linked to `grupoEpiId` and `userId`
+- `template`: uploaded file metadata stored alongside the physical file in `uploads/`
+- `interactions`: document generation history, including `data_used`
 
-Observação: o `script.sql` presente no repositório cobre apenas a tabela `interactions`, então o restante do schema precisa existir previamente no banco.
+Note: the repository `script.sql` currently covers only the `interactions` table, so the rest of the schema must already exist in the target database.
 
-## Templates DOCX
+## DOCX Templates
 
-O preenchimento usa as chaves do objeto enviado ao `docxtemplater`. Na prática:
+The rendering step uses the keys present in the object sent to `docxtemplater`. In practice:
 
-- dados da pessoa são injetados diretamente no template
-- `dataGeracaoDocumento` é adicionada automaticamente
-- em fluxos com EPI, o template recebe um array `epis`
+- person fields are injected directly into the template
+- `dataGeracaoDocumento` is added automatically
+- in PPE-related flows, the template receives an `epis` array
 
-Exemplo conceitual de placeholders:
+Conceptual placeholder example:
 
 ```text
 {{nome}}
@@ -203,97 +203,97 @@ Exemplo conceitual de placeholders:
 
 ## Endpoints
 
-### Usuários
+### Users
 
-| Método | Rota | Descrição | Auth |
+| Method | Route | Description | Auth |
 |---|---|---|---|
-| POST | `/v1/users/register` | Cria usuário | Não |
-| POST | `/v1/users/login` | Autentica e retorna JWT | Não |
-| PUT | `/v1/users/status` | Atualiza status do usuário | Sim |
+| POST | `/v1/users/register` | Create user | No |
+| POST | `/v1/users/login` | Authenticate and return JWT | No |
+| PUT | `/v1/users/status` | Update user status | Yes |
 
-### Pessoas
+### People
 
-| Método | Rota | Descrição | Auth |
+| Method | Route | Description | Auth |
 |---|---|---|---|
-| POST | `/v1/pessoas` | Cria pessoa | Sim |
-| GET | `/v1/pessoas` | Lista pessoas com paginação | Sim |
-| GET | `/v1/pessoas/:id` | Busca pessoa por id | Sim |
-| PUT | `/v1/pessoas/:id` | Atualiza pessoa | Sim |
-| DELETE | `/v1/pessoas/:id` | Remove pessoa | Sim |
-| DELETE | `/v1/pessoas/delete-all` | Remove todas as pessoas do usuário | Sim |
-| POST | `/v1/pessoas/import` | Importa pessoas via Excel | Sim |
+| POST | `/v1/pessoas` | Create person | Yes |
+| GET | `/v1/pessoas` | List people with pagination | Yes |
+| GET | `/v1/pessoas/:id` | Get person by id | Yes |
+| PUT | `/v1/pessoas/:id` | Update person | Yes |
+| DELETE | `/v1/pessoas/:id` | Delete person | Yes |
+| DELETE | `/v1/pessoas/delete-all` | Delete all people for the authenticated user | Yes |
+| POST | `/v1/pessoas/import` | Import people from Excel | Yes |
 
-### Grupo de Pessoas
+### People Groups
 
-| Método | Rota | Descrição | Auth |
+| Method | Route | Description | Auth |
 |---|---|---|---|
-| POST | `/v1/grupo` | Cria grupo de pessoas | Sim |
-| GET | `/v1/grupo` | Lista grupos de pessoas | Sim |
-| GET | `/v1/grupo/:id` | Busca grupo por id | Sim |
-| PUT | `/v1/grupo/:id` | Atualiza grupo | Sim |
-| DELETE | `/v1/grupo/:id` | Remove grupo | Sim |
+| POST | `/v1/grupo` | Create people group | Yes |
+| GET | `/v1/grupo` | List people groups | Yes |
+| GET | `/v1/grupo/:id` | Get people group by id | Yes |
+| PUT | `/v1/grupo/:id` | Update people group | Yes |
+| DELETE | `/v1/grupo/:id` | Delete people group | Yes |
 
-### Grupo de EPI
+### PPE Groups
 
-| Método | Rota | Descrição | Auth |
+| Method | Route | Description | Auth |
 |---|---|---|---|
-| POST | `/v1/grupo-epi` | Cria grupo de EPI | Sim |
-| GET | `/v1/grupo-epi` | Lista grupos de EPI | Sim |
-| GET | `/v1/grupo-epi/:id` | Busca grupo de EPI por id | Sim |
-| PUT | `/v1/grupo-epi/:id` | Atualiza grupo de EPI | Sim |
-| DELETE | `/v1/grupo-epi/:id` | Remove grupo de EPI | Sim |
-| POST | `/v1/grupo-epi/import` | Importa grupos de EPI via Excel | Sim |
+| POST | `/v1/grupo-epi` | Create PPE group | Yes |
+| GET | `/v1/grupo-epi` | List PPE groups | Yes |
+| GET | `/v1/grupo-epi/:id` | Get PPE group by id | Yes |
+| PUT | `/v1/grupo-epi/:id` | Update PPE group | Yes |
+| DELETE | `/v1/grupo-epi/:id` | Delete PPE group | Yes |
+| POST | `/v1/grupo-epi/import` | Import PPE groups from Excel | Yes |
 
-### EPIs
+### PPE Items
 
-| Método | Rota | Descrição | Auth |
+| Method | Route | Description | Auth |
 |---|---|---|---|
-| POST | `/v1/epi` | Cria EPI | Sim |
-| GET | `/v1/epi` | Lista EPIs com paginação | Sim |
-| GET | `/v1/epi/:id` | Busca EPI por id | Sim |
-| GET | `/v1/epi/grupo/:id` | Lista EPIs por grupo | Sim |
-| PUT | `/v1/epi/:id` | Atualiza EPI | Sim |
-| DELETE | `/v1/epi/:id` | Remove EPI | Sim |
-| POST | `/v1/epi/import` | Importa EPIs via Excel | Sim |
+| POST | `/v1/epi` | Create PPE item | Yes |
+| GET | `/v1/epi` | List PPE items with pagination | Yes |
+| GET | `/v1/epi/:id` | Get PPE item by id | Yes |
+| GET | `/v1/epi/grupo/:id` | List PPE items by group | Yes |
+| PUT | `/v1/epi/:id` | Update PPE item | Yes |
+| DELETE | `/v1/epi/:id` | Delete PPE item | Yes |
+| POST | `/v1/epi/import` | Import PPE items from Excel | Yes |
 
-### Templates e Geração de Documentos
+### Templates and Document Generation
 
-| Método | Rota | Descrição | Auth |
+| Method | Route | Description | Auth |
 |---|---|---|---|
-| POST | `/v1/templates` | Faz upload de template | Sim |
-| GET | `/v1/templates/:id` | Busca template por id | Sim |
-| GET | `/v1/templates/user/:userid` | Lista templates por usuário | Sim |
-| GET | `/v1/templates/:userid/download?arquivo=...` | Faz download do template físico | Sim |
-| PUT | `/v1/templates/:id` | Atualiza metadados do template | Sim |
-| DELETE | `/v1/templates/:id` | Remove template e arquivo | Sim |
-| GET | `/v1/fill-docx-template/:idtemplate/pessoa/:idpessoa` | Gera um DOCX para uma pessoa | Sim |
-| POST | `/v1/fill-docx-template/:idtemplate/pessoa/:idpessoa/epi` | Gera um DOCX para uma pessoa com EPIs | Sim |
-| POST | `/v1/fill-docx-template/batch` | Gera documentos em lote e retorna ZIP | Sim |
-| POST | `/v1/fill-docx-template/batch/epi` | Gera documentos em lote com EPIs e retorna ZIP | Sim |
+| POST | `/v1/templates` | Upload template | Yes |
+| GET | `/v1/templates/:id` | Get template by id | Yes |
+| GET | `/v1/templates/user/:userid` | List templates by user | Yes |
+| GET | `/v1/templates/:userid/download?arquivo=...` | Download physical template file | Yes |
+| PUT | `/v1/templates/:id` | Update template metadata | Yes |
+| DELETE | `/v1/templates/:id` | Delete template and physical file | Yes |
+| GET | `/v1/fill-docx-template/:idtemplate/pessoa/:idpessoa` | Generate one DOCX for one person | Yes |
+| POST | `/v1/fill-docx-template/:idtemplate/pessoa/:idpessoa/epi` | Generate one DOCX for one person with PPE items | Yes |
+| POST | `/v1/fill-docx-template/batch` | Generate batch documents and return ZIP | Yes |
+| POST | `/v1/fill-docx-template/batch/epi` | Generate batch documents with PPE items and return ZIP | Yes |
 
-### Interações
+### Interactions
 
-| Método | Rota | Descrição | Auth |
+| Method | Route | Description | Auth |
 |---|---|---|---|
-| POST | `/v1/interactions` | Cria interação manualmente | Sim |
-| GET | `/v1/interactions` | Lista histórico de gerações | Sim |
+| POST | `/v1/interactions` | Create interaction manually | Yes |
+| GET | `/v1/interactions` | List generation history | Yes |
 
-## Paginação
+## Pagination
 
-As listagens principais usam os parâmetros:
+Main listing endpoints use:
 
 - `page`
 - `pageSize`
 
-E retornam:
+And return:
 
 - `data`
 - `page`
 - `pageSize`
 - `totalPages`
-- header `X-Total-Count`
+- `X-Total-Count` response header
 
-## Exemplos de Uso
+## Usage Examples
 
 ### Login
 
@@ -303,7 +303,7 @@ curl -X POST http://localhost:3000/v1/users/login \
   -d '{"email":"admin@teste.com","password":"123456"}'
 ```
 
-### Criar pessoa
+### Create Person
 
 ```bash
 curl -X POST http://localhost:3000/v1/pessoas \
@@ -312,17 +312,17 @@ curl -X POST http://localhost:3000/v1/pessoas \
   -d '{"nome":"Maria","cpf":"00000000000","grupoId":1}'
 ```
 
-### Upload de template
+### Upload Template
 
 ```bash
 curl -X POST http://localhost:3000/v1/templates \
   -H "Authorization: Bearer TOKEN" \
-  -F "descricao=Ficha de registro" \
-  -F "tipoTemplate=admissao" \
-  -F "file=@./modelo.docx"
+  -F "descricao=Registration form" \
+  -F "tipoTemplate=admission" \
+  -F "file=@./template.docx"
 ```
 
-### Geração em lote com EPIs
+### Batch Generation With PPE
 
 ```bash
 curl -X POST http://localhost:3000/v1/fill-docx-template/batch/epi \
@@ -338,18 +338,18 @@ curl -X POST http://localhost:3000/v1/fill-docx-template/batch/epi \
   }'
 ```
 
-## Pontos de Atenção no Código Atual
+## Current Codebase Notes
 
-- o script `npm start` usa `nodemon`
-- não há suíte de testes configurada
-- o CORS está fixado em `http://localhost:3001`
-- há inconsistências pontuais de nomenclatura entre `userId` e `userid` no acesso ao banco
-- o histórico de interações depende da coluna `data_used` em JSON
+- `npm start` runs the app with `nodemon`
+- there is no test suite configured
+- CORS is hardcoded to `http://localhost:3001`
+- there are some naming inconsistencies between `userId` and `userid` in database access
+- interaction history depends on a JSON `data_used` column
 
-## Próximos Melhoramentos Sugeridos
+## Suggested Next Improvements
 
-- versionar o schema completo do banco
-- adicionar validação de payload
-- padronizar nomenclatura de colunas e respostas
-- mover configurações de CORS para ambiente
-- adicionar testes de integração para os fluxos de geração
+- version the full database schema
+- add request payload validation
+- standardize column and response naming
+- move CORS settings to environment variables
+- add integration tests for document generation flows
